@@ -1,0 +1,59 @@
+/* ---------------------------------------------------------
+   LISTVIEW  — the results, and each row (element) inside it
+   --------------------------------------------------------- */
+
+listview {
+    lines:     10;                  /* rows shown at once */
+    columns:   1;                  /* set 2+ for a grid */
+    spacing:   4px;                /* gap between rows */
+    scrollbar: false;
+    fixed-height: true;            /* keep the window height constant */
+}
+
+/* one row: [ icon ][ name ] */
+element {
+    padding:       8px 12px;
+    spacing:       12px;           /* gap between icon and text */
+    border-radius: 14px;
+    cursor:        pointer;
+}
+
+element-icon {
+    size:   32px;
+    cursor: inherit;
+}
+
+element-text {
+    vertical-align: 0.5;           /* centre text next to the icon */
+    cursor:         inherit;
+}
+
+/* ---- row states: <normal|alternate|selected>.<normal|urgent|active> ---- */
+
+element normal.normal,
+element alternate.normal {
+    background-color: transparent;
+    text-color:       @fg-dim;
+}
+
+element selected.normal {
+    background-color: @selected;
+    text-color:       @fg;
+}
+
+element normal.urgent,
+element alternate.urgent,
+element selected.urgent {
+    text-color: @urgent;
+}
+
+/* 'active' = e.g. already-open windows in window mode */
+element normal.active,
+element alternate.active {
+    text-color: @accent;
+}
+
+element selected.active {
+    background-color: @selected;
+    text-color:       @accent;
+}

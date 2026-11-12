@@ -1,0 +1,26 @@
+/* ---------------------------------------------------------
+   WINDOW  — the outer popup and its main container
+   (like general/decoration in hypr's display.lua)
+   --------------------------------------------------------- */
+
+window {
+    location:         center;      /* north, south, east, northwest … */
+    width:            700px;
+    border:           2px;         /* matches hypr border_size */
+    border-color:     @accent;
+    border-radius:    14px;        /* matches hypr rounding */
+    background-color: @bg;
+}
+
+/* mainbox stacks the children vertically: input on top, list below */
+mainbox {
+    padding:  14px;
+    spacing:  12px;                /* gap between inputbar and listview */
+    children: [ inputbar, message, listview ];
+}
+
+message {
+    padding:          8px 12px;
+    border-radius:    10px;
+    background-color: @bg-alt;
+}

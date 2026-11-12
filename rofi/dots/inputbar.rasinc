@@ -1,0 +1,18 @@
+/* ---------------------------------------------------------
+   INPUTBAR  — the top row: just the search box
+   (add prompt back to children to show 'Apps' / 'Run' again)
+   --------------------------------------------------------- */
+
+inputbar {
+    padding:          10px 14px;
+    spacing:          12px;        /* gap between prompt and entry */
+    border-radius:    10px;
+    background-color: @bg-alt;
+    children:         [ entry ];   /* pieces: prompt, entry, case-indicator … */
+}
+
+entry {
+    placeholder:       "Search…";
+    placeholder-color: @fg-dim;
+    cursor:            text;       /* mouse cursor shape when hovering */
+}

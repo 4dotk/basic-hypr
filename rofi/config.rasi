@@ -1,0 +1,40 @@
+/* ==========================================================
+   ROFI ENTRY POINT  (like hyprland.lua)
+   Behaviour lives here; looks live in the dots folder.
+   Imports are read top to bottom — later files override earlier ones,
+   so colors must come first.
+   NOTE: inside comments never write double quotes or slash-star —
+   rofi 2.0 then silently ignores the whole config.
+   Use 'single' quotes instead. Check with:  rofi -dump-config
+   ========================================================== */
+
+/* drop rofi's built-in theme so only our files apply
+   (it was making the typed text dark teal) */
+@theme "/dev/null"
+
+configuration {
+    modes:             "drun,run,window";   /* switch between them with Ctrl+Tab */
+    show-icons:        true;                /* app icons in the list */
+    icon-theme:        "Papirus-Dark";
+    font:              "Hack Nerd Font, sans-serif 12";   /* falls back to the desktop sans font if Hack is missing */
+    drun-display-format: "{name}";          /* just the app name, no (generic) suffix */
+
+    display-drun:      "Apps";              /* prompt text per mode */
+    display-run:       "Run";
+    display-window:    "Windows";
+
+    case-sensitive:    false;
+    matching:          "fuzzy";             /* 'ffx' finds Firefox */
+
+    /* ranking: score every match against the app NAME only, best first.
+       Apps that only matched via keywords or their exec command
+       score low, so they end up at the bottom instead of the top. */
+    sort:              true;
+    sorting-method:    "fzf";
+    drun-match-fields: "name,generic,keywords,categories,exec";
+}
+
+@import "dots/colors"
+@import "dots/window"
+@import "dots/inputbar"
+@import "dots/listview"
