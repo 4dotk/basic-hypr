@@ -1,0 +1,18 @@
+// ---------------------------------------------------------
+// VIEW  — base for every view inside a pill: sits centred in the pill and
+// fades in/out. Set implicitWidth/implicitHeight; the pill sizes to them.
+// ---------------------------------------------------------
+
+import QtQuick
+import qs
+
+Item {
+    property bool shown: false
+
+    anchors.centerIn: parent
+    opacity: shown ? 1 : 0
+    visible: opacity > 0
+    enabled: shown                  // a fading-out view can't be clicked
+
+    Behavior on opacity { NumberAnimation { duration: Theme.fade } }
+}

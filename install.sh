@@ -43,10 +43,12 @@ echo; echo "configs"
 link hypr    "$CONFIG/hypr"
 link rofi    "$CONFIG/rofi"
 link kitty   "$CONFIG/kitty"
+link quickshell "$CONFIG/quickshell"
 
 echo; echo "scripts"
 run chmod +x "$REPO/scripts/"*.sh
 link scripts/screenshot.sh "$HOME/.local/scripts/screenshot.sh"
+link scripts/theme.sh      "$HOME/.local/scripts/theme.sh"
 
 echo; echo "cursor theme"
 link cursors/Robot "$DATA/icons/Robot"
@@ -55,7 +57,7 @@ link cursors/Robot "$HOME/.icons/Robot"      # Plasma's cursor settings only loo
 # --- what's missing (warn only, installs nothing) -----------------------------
 echo; echo "checking dependencies"
 missing=()
-for cmd in Hyprland hyprpaper hyprpicker rofi kitty grim slurp wl-copy jq xdg-user-dir dolphin; do
+for cmd in Hyprland hyprpaper hyprpicker rofi kitty qs brightnessctl grim slurp wl-copy jq xdg-user-dir dolphin; do
     command -v "$cmd" >/dev/null || missing+=("$cmd")
 done
 fonts="$(fc-list : family)"   # read once; piping into grep -q breaks under pipefail

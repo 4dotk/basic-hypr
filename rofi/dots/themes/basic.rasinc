@@ -1,0 +1,16 @@
+/* ---------------------------------------------------------
+   THEME: BASIC  — like an unfocused Hyprland window:
+   kitty background, Hyprland blues for border and accent.
+   Same values as the basic palette in quickshell/Theme.qml.
+   Rofi colours are #RRGGBBAA — alpha comes LAST.
+   --------------------------------------------------------- */
+
+* {
+    bg:       #141415f2;   /* window background, 95% */
+    bg-alt:   #26262cff;   /* input bar, surfaces */
+    selected: #11aaff33;   /* highlighted row, accent at 20% */
+    accent:   #11aaff;     /* border, active items (hypr active border) */
+    fg:       #cdcdcd;     /* text */
+    fg-dim:   #6a6a78;     /* placeholder, unselected rows */
+    urgent:   #e0a363;     /* amber */
+}

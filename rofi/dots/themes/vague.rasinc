@@ -1,0 +1,15 @@
+/* ---------------------------------------------------------
+   THEME: VAGUE  — matches the kitty Vague colourscheme, very muted.
+   Same values as the vague palette in quickshell/Theme.qml.
+   Rofi colours are #RRGGBBAA — alpha comes LAST.
+   --------------------------------------------------------- */
+
+* {
+    bg:       #141415e6;
+    bg-alt:   #252530ff;
+    selected: #6e94b233;
+    accent:   #6e94b2;     /* soft steel blue (kitty blue) */
+    fg:       #cdcdcd;
+    fg-dim:   #606079;
+    urgent:   #e0a363;
+}

@@ -22,7 +22,9 @@ Running it again is safe.
 | `hypr/` | `~/.config/hypr` |
 | `rofi/` | `~/.config/rofi` |
 | `kitty/` | `~/.config/kitty` |
+| `quickshell/` | `~/.config/quickshell` |
 | `scripts/screenshot.sh` | `~/.local/scripts/screenshot.sh` |
+| `scripts/theme.sh` | `~/.local/scripts/theme.sh` |
 | `cursors/Robot/` | `~/.local/share/icons/Robot` and `~/.icons/Robot` (Plasma looks there) |
 
 ## Change these first
@@ -41,6 +43,8 @@ Fedora names; `install.sh` warns about anything missing but installs nothing.
 | Needed for | Packages |
 |---|---|
 | Desktop | `hyprland` `hyprpaper` `hyprpolkitagent` `kitty` `rofi` |
+| Bar | `quickshell` `brightnessctl` `lm_sensors` |
+| Media keys | `wireplumber` `brightnessctl` `playerctl` |
 | Screenshots | `grim` `slurp` `hyprpicker` `wl-clipboard` `jq` `xdg-user-dirs` |
 | Qt/KDE apps looking right | `plasma-integration` `plasma-breeze` (used via `QT_QPA_PLATFORMTHEME=kde`) |
 | File manager | `dolphin` |
@@ -53,6 +57,22 @@ system's default sans / monospace font and icon theme are used instead.
 - [JetBrainsMono Nerd Font](https://www.nerdfonts.com/font-downloads) — kitty
 - [Papirus](https://github.com/PapirusDevelopmentTeam/papirus-icon-theme) (`Papirus-Dark`) — rofi icons
 
+## Themes
+
+Two colour themes for the bar and rofi: **Vague** (default — matches the kitty
+Vague colours, very muted) and **Basic** (Hyprland's blues, the bar looks like
+an unfocused window).
+
+```bash
+~/.local/scripts/theme.sh          # pick from a rofi menu
+~/.local/scripts/theme.sh basic    # or switch directly
+~/.local/scripts/theme.sh list
+```
+
+The bar recolours straight away; rofi uses it from its next launch. The choice
+is kept in `~/.local/state/basic-hypr/`, outside the repo. A theme is a file in
+`rofi/dots/themes/` plus a palette with the same name in `quickshell/Theme.qml`.
+
 ## Keys (SUPER = Windows key)
 
 | Key | Does |
@@ -60,6 +80,8 @@ system's default sans / monospace font and icon theme are used instead.
 | `SUPER + Q` / `E` / `R` | terminal / file manager / launcher |
 | `SUPER + C` | close window |
 | `SUPER + V` | float / tile window |
+| `SUPER + SHIFT + F` | fullscreen window (covers bar and gaps) |
+| `SUPER + F` | hide / show the bar (notifications and the OSD still pop in) |
 | `SUPER + 1…0`, `+ SHIFT` | go to / move window to workspace |
 | `SUPER + S` | scratchpad workspace |
 | `Print` | screenshot: select a region (screen freezes while selecting) |
@@ -67,6 +89,39 @@ system's default sans / monospace font and icon theme are used instead.
 | `SUPER + Print` | screenshot: focused window |
 
 Screenshots go to `~/Pictures/Screenshots` and the clipboard.
+
+## The bar
+
+Separate pills along the top of each monitor:
+
+```
+[1 2 3][cpu mem temp]        [time] [media]        [quick widgets — coming]
+```
+
+| Pill | Shows | Mouse |
+|---|---|---|
+| workspaces | workspaces on this monitor, active highlighted | click: go there · scroll: next / previous |
+| stats | CPU %, used RAM, CPU temperature (`sensors`) every 2 s; amber when high (70% / 70°), bold at 90% / 85° | |
+| clock | date + time (+ running timer / stopwatch) | click time: timer / stopwatch · click date: calendar |
+| media | cover + title, only while something plays | hover: artist, progress, prev/play/next |
+
+The clock pill also shows the volume / brightness OSD (plain 5% steps) and,
+for now, notification popups (left click: open · right click: dismiss).
+Panels close when you click anywhere outside the bar.
+
+Quickshell is also the notification daemon, so don't run mako/dunst next to it.
+Live reload on save doesn't always pick up changes (files in `bar/`, new files),
+so after editing restart it: `pkill -x qs; hyprctl dispatch 'hl.dsp.exec_cmd("qs")'`.
+Errors: `qs log`.
+
+From a shell or a keybind:
+
+```
+qs ipc call bar toggle            hide / show the bar · show · hide
+qs ipc call panel toggle          open/close the timer / stopwatch panel
+qs ipc call timer start 25        timer: start 25 min · toggle · reset
+qs ipc call stopwatch toggle      stopwatch: toggle · lap · reset
+```
 
 ## Layout
 
@@ -78,8 +133,15 @@ hypr/
 rofi/
   config.rasi         behaviour + @imports
   dots/               colors, window, inputbar, listview
+  dots/themes/        colour themes: vague (default), basic
 kitty/kitty.conf
+quickshell/
+  shell.qml           entry point, one bar per monitor
+  Theme.qml           colours/sizes (same palette as rofi)
+  services/           audio, brightness, media, notifications, osd, stats, timer, stopwatch
+  bar/                the bar, one file per pill, and the views inside them
 scripts/screenshot.sh grim + slurp + hyprpicker + wl-copy
+scripts/theme.sh      switch the colour theme (bar + rofi)
 cursors/
   Robot/              Breeze Light + steel-blue ring spinner (hyprcursor + XCursor)
   build_xcursor.py    rebuilds the XCursor part if you edit the spinner

@@ -50,6 +50,16 @@ hl.layer_rule({
     ignore_alpha = 0.5,
 })
 
+-- Blur behind the quickshell bar pills, same trick as rofi: its window is a big
+-- transparent strip, ignore_alpha keeps the blur to the pills themselves.
+hl.layer_rule({
+    name         = "blur-bar",
+    match        = { namespace = "^quickshell-bar$" },
+
+    blur         = true,
+    ignore_alpha = 0.5,
+})
+
 -- Screenshot overlays (slurp = 'selection', hyprpicker freeze) must vanish
 -- instantly — otherwise their fade-out gets captured and tints the shot.
 hl.layer_rule({

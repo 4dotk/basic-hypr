@@ -1,18 +1,16 @@
 /* ---------------------------------------------------------
-   COLORS  — the Robot palette (same blues as the cursor and
-   Hyprland borders). Change a colour here and it changes everywhere.
-   Use them in other files as @name.
+   COLORS  — the colour names used by the other files (@bg, @accent …)
+   come from a theme in themes/.
+
+   Vague is the default. The theme picked with theme.sh is linked at
+   ~/.local/state/basic-hypr/rofi-theme.rasinc and loaded on top;
+   the leading ? means: skip it quietly if it does not exist yet.
    --------------------------------------------------------- */
 
-* {
-    bg:          #161616df;   /* window background — e6 = 90% opaque, f2 = 95% */
-    bg-alt:      #323232ff;   /* input bar / subtle surfaces */
-    selected:    #11aabb33;   /* highlighted row — accent at 20% (33 = alpha) */
-    accent:      #1199aa;     /* border, active items */
-    fg:          #eeeeee;     /* main text, typed text, highlighted row */
-    fg-dim:      #eeeeee80;   /* placeholder / unselected rows — 80 = 50% */
-    urgent:      #FF6B6B;
+@import "themes/vague"
+?import "~/.local/state/basic-hypr/rofi-theme.rasinc"
 
+* {
     /* every widget starts transparent with normal text,
        so only the things we style get a colour */
     background-color: transparent;

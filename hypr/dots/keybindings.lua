@@ -24,6 +24,11 @@ hl.bind(mainMod .. " + R", hl.dsp.exec_cmd(menu))
 hl.bind(mainMod .. " + P", hl.dsp.window.pseudo())
 hl.bind(mainMod .. " + J", hl.dsp.layout("togglesplit")) -- dwindle only
 
+-- Hide / show the quickshell bar (notifications and the volume OSD still pop in)
+hl.bind(mainMod .. " + F", hl.dsp.exec_cmd("qs ipc call bar toggle"))
+-- Fullscreen the active window (covers the bar and gaps)
+hl.bind(mainMod .. " + SHIFT + F", hl.dsp.window.fullscreen({ mode = "fullscreen", action = "toggle" }))
+
 -- Screenshots (saved to ~/Pictures/Screenshots + copied to clipboard)
 hl.bind("Print", hl.dsp.exec_cmd(screenshot .. " region"))               -- drag to select
 hl.bind("SHIFT + Print", hl.dsp.exec_cmd(screenshot .. " screen"))       -- whole monitor
@@ -55,17 +60,25 @@ hl.bind(mainMod .. " + mouse_up", hl.dsp.focus({ workspace = "e-1" }))
 hl.bind(mainMod .. " + mouse:272", hl.dsp.window.drag(), { mouse = true })
 hl.bind(mainMod .. " + mouse:273", hl.dsp.window.resize(), { mouse = true })
 
--- Laptop multimedia keys for volume and LCD brightness
-hl.bind("XF86AudioRaiseVolume", hl.dsp.exec_cmd("wpctl set-volume -l 1 @DEFAULT_AUDIO_SINK@ 5%+"),
+-- Laptop multimedia keys for volume and LCD brightness: plain 5% steps.
+-- Volume up/down also unmutes. Every key then pokes the quickshell island so
+-- the OSD shows even when nothing changed (already at 0% or 100%).
+local sink = "@DEFAULT_AUDIO_SINK@"
+local osd  = function(kind) return " ; qs ipc call osd " .. kind end
+hl.bind("XF86AudioRaiseVolume",
+    hl.dsp.exec_cmd("wpctl set-mute " .. sink .. " 0 ; wpctl set-volume -l 1 " .. sink .. " 5%+" .. osd("volume")),
     { locked = true, repeating = true })
-hl.bind("XF86AudioLowerVolume", hl.dsp.exec_cmd("wpctl set-volume @DEFAULT_AUDIO_SINK@ 5%-"),
+hl.bind("XF86AudioLowerVolume",
+    hl.dsp.exec_cmd("wpctl set-mute " .. sink .. " 0 ; wpctl set-volume " .. sink .. " 5%-" .. osd("volume")),
     { locked = true, repeating = true })
-hl.bind("XF86AudioMute", hl.dsp.exec_cmd("wpctl set-mute @DEFAULT_AUDIO_SINK@ toggle"),
-    { locked = true, repeating = true })
+hl.bind("XF86AudioMute", hl.dsp.exec_cmd("wpctl set-mute " .. sink .. " toggle" .. osd("volume")),
+    { locked = true })
 hl.bind("XF86AudioMicMute", hl.dsp.exec_cmd("wpctl set-mute @DEFAULT_AUDIO_SOURCE@ toggle"),
+    { locked = true })
+hl.bind("XF86MonBrightnessUp", hl.dsp.exec_cmd("brightnessctl -n2 set 5%+" .. osd("brightness")),
     { locked = true, repeating = true })
-hl.bind("XF86MonBrightnessUp", hl.dsp.exec_cmd("brightnessctl -e4 -n2 set 5%+"), { locked = true, repeating = true })
-hl.bind("XF86MonBrightnessDown", hl.dsp.exec_cmd("brightnessctl -e4 -n2 set 5%-"), { locked = true, repeating = true })
+hl.bind("XF86MonBrightnessDown", hl.dsp.exec_cmd("brightnessctl -n2 set 5%-" .. osd("brightness")),
+    { locked = true, repeating = true })
 
 -- Requires playerctl
 hl.bind("XF86AudioNext", hl.dsp.exec_cmd("playerctl next"), { locked = true })
