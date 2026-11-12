@@ -37,7 +37,7 @@ PanelWindow {
 
     // ---- the layer surface ----
     anchors { top: true; left: true; right: true }
-    implicitHeight: 400                   // room for the tallest panel
+    implicitHeight: 540                   // room for the tallest panel (6-week calendar)
     exclusiveZone: hidden ? 0 : Theme.gap + Theme.idleHeight   // tiled windows start below the resting pills
     color: "transparent"
 

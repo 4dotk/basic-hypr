@@ -14,10 +14,12 @@ Column {
     property int year
     property int month               // 0-11, like JS Date
     // sizes: change these to scale the whole calendar
-    readonly property int cell: 50          // day column width
-    readonly property int row: 42           // day row height
+    readonly property int cell: 62          // day column width
+    readonly property int row: 50           // day row height
 
-    spacing: 16                             // header <-> grid
+    spacing: 20                             // header <-> grid
+    // breathing room inside the pill, on top of its own 12px
+    padding: 22
 
     SystemClock { id: clock; precision: SystemClock.Minutes }   // moves "today" at midnight
 
@@ -35,13 +37,16 @@ Column {
     // Qt: Monday=1 … Sunday=7.  JS Date: Sunday=0 … Saturday=6
     readonly property int firstDay: Qt.locale().firstDayOfWeek % 7
 
-    // 6 weeks x 7 days, starting on the first-day-of-week before the 1st
+    // only the weeks this month needs (4-6), starting on the first-day-of-week
+    // before the 1st, so there's no mostly-faded extra row at the bottom
     readonly property var days: {
         const first = new Date(year, month, 1);
         const offset = (first.getDay() - firstDay + 7) % 7;
+        const inMonth = new Date(year, month + 1, 0).getDate();
+        const cells = Math.ceil((offset + inMonth) / 7) * 7;
         const now = clock.date;
         const out = [];
-        for (let i = 0; i < 42; i++) {
+        for (let i = 0; i < cells; i++) {
             const d = new Date(year, month, 1 - offset + i);
             out.push({
                 day: d.getDate(),
@@ -67,7 +72,7 @@ Column {
             anchors.centerIn: parent
             text: Qt.locale().standaloneMonthName(root.month) + " " + root.year
             font.bold: true
-            font.pixelSize: Theme.fontSize + 2
+            font.pixelSize: 20
             MouseArea {
                 anchors.fill: parent
                 cursorShape: Qt.PointingHandCursor
@@ -86,7 +91,7 @@ Column {
     Grid {
         id: grid
         columns: 7
-        spacing: 4
+        spacing: 6
 
         Repeater {
             model: 7
@@ -96,7 +101,7 @@ Column {
                 horizontalAlignment: Text.AlignHCenter
                 text: Qt.locale().dayName((root.firstDay + index) % 7, Locale.ShortFormat).slice(0, 2)
                 color: Theme.fgDim
-                font.pixelSize: Theme.smallSize
+                font.pixelSize: 15
             }
         }
 
@@ -112,7 +117,7 @@ Column {
                 Label {
                     anchors.centerIn: parent
                     text: parent.modelData.day
-                    font.pixelSize: Theme.fontSize
+                    font.pixelSize: 18
                     font.bold: parent.modelData.today
                     color: parent.modelData.today ? Theme.bg
                          : parent.modelData.inMonth ? Theme.fg

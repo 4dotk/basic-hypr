@@ -49,6 +49,7 @@ echo; echo "scripts"
 run chmod +x "$REPO/scripts/"*.sh
 link scripts/screenshot.sh "$HOME/.local/scripts/screenshot.sh"
 link scripts/theme.sh      "$HOME/.local/scripts/theme.sh"
+link scripts/logout.sh     "$HOME/.local/scripts/logout.sh"
 
 echo; echo "cursor theme"
 link cursors/Robot "$DATA/icons/Robot"

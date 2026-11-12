@@ -25,6 +25,7 @@ Running it again is safe.
 | `quickshell/` | `~/.config/quickshell` |
 | `scripts/screenshot.sh` | `~/.local/scripts/screenshot.sh` |
 | `scripts/theme.sh` | `~/.local/scripts/theme.sh` |
+| `scripts/logout.sh` | `~/.local/scripts/logout.sh` |
 | `cursors/Robot/` | `~/.local/share/icons/Robot` and `~/.icons/Robot` (Plasma looks there) |
 
 ## Change these first
@@ -44,6 +45,7 @@ Fedora names; `install.sh` warns about anything missing but installs nothing.
 |---|---|
 | Desktop | `hyprland` `hyprpaper` `hyprpolkitagent` `kitty` `rofi` |
 | Bar | `quickshell` `brightnessctl` `lm_sensors` |
+| Clean logout | `hyprshutdown` (optional — without it apps aren't asked to close first) |
 | Media keys | `wireplumber` `brightnessctl` `playerctl` |
 | Screenshots | `grim` `slurp` `hyprpicker` `wl-clipboard` `jq` `xdg-user-dirs` |
 | Qt/KDE apps looking right | `plasma-integration` `plasma-breeze` (used via `QT_QPA_PLATFORMTHEME=kde`) |
@@ -79,6 +81,7 @@ is kept in `~/.local/state/basic-hypr/`, outside the repo. A theme is a file in
 |---|---|
 | `SUPER + Q` / `E` / `R` | terminal / file manager / launcher |
 | `SUPER + C` | close window |
+| `SUPER + M` | log out cleanly (closes apps first) |
 | `SUPER + V` | float / tile window |
 | `SUPER + SHIFT + F` | fullscreen window (covers bar and gaps) |
 | `SUPER + F` | hide / show the bar (notifications and the OSD still pop in) |
@@ -142,6 +145,7 @@ quickshell/
   bar/                the bar, one file per pill, and the views inside them
 scripts/screenshot.sh grim + slurp + hyprpicker + wl-copy
 scripts/theme.sh      switch the colour theme (bar + rofi)
+scripts/logout.sh     clean logout: close apps, stop background clients, exit
 cursors/
   Robot/              Breeze Light + steel-blue ring spinner (hyprcursor + XCursor)
   build_xcursor.py    rebuilds the XCursor part if you edit the spinner
