@@ -3,6 +3,9 @@
 #
 #   ./install.sh            create the symlinks
 #   ./install.sh --dry-run  only show what would happen
+#   ./install.sh --kwallet  also make KDE Wallet the password store (Secret
+#                           Service) instead of gnome-keyring — opt-in, see
+#                           dbus/org.freedesktop.secrets.service
 #
 # Anything already at a target is moved to <target>.bak.<timestamp>, never deleted.
 # Running it again is safe: links that are already correct are skipped.
@@ -15,7 +18,14 @@ CONFIG="${XDG_CONFIG_HOME:-$HOME/.config}"
 DATA="${XDG_DATA_HOME:-$HOME/.local/share}"
 STAMP="$(date +%Y%m%d-%H%M%S)"
 DRY=0
-[ "${1:-}" = "--dry-run" ] && DRY=1
+KWALLET=0
+for arg in "$@"; do
+    case "$arg" in
+        --dry-run) DRY=1 ;;
+        --kwallet) KWALLET=1 ;;
+        *) echo "unknown option: $arg" >&2; exit 1 ;;
+    esac
+done
 
 run() { if [ "$DRY" = 1 ]; then echo "    would: $*"; else "$@"; fi; }
 
@@ -50,6 +60,15 @@ run chmod +x "$REPO/scripts/"*.sh
 link scripts/screenshot.sh "$HOME/.local/scripts/screenshot.sh"
 link scripts/theme.sh      "$HOME/.local/scripts/theme.sh"
 link scripts/logout.sh     "$HOME/.local/scripts/logout.sh"
+
+if [ "$KWALLET" = 1 ]; then
+    echo; echo "password store: KDE Wallet (--kwallet)"
+    if command -v ksecretd >/dev/null; then
+        link dbus/org.freedesktop.secrets.service "$DATA/dbus-1/services/org.freedesktop.secrets.service"
+    else
+        echo "  skipped: ksecretd not found (needs KDE Wallet / kf6-kwallet)"
+    fi
+fi
 
 echo; echo "cursor theme"
 link cursors/Robot "$DATA/icons/Robot"

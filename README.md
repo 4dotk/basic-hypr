@@ -10,6 +10,7 @@ git clone <this repo> anywhere/you/like
 cd anywhere/you/like
 ./install.sh --dry-run   # see what will happen
 ./install.sh             # do it
+./install.sh --kwallet   # optional: KDE Wallet as the password store
 ```
 
 `install.sh` works out where the repo is, so you can keep it anywhere. It
@@ -74,6 +75,30 @@ an unfocused window).
 The bar recolours straight away; rofi uses it from its next launch. The choice
 is kept in `~/.local/state/basic-hypr/`, outside the repo. A theme is a file in
 `rofi/dots/themes/` plus a palette with the same name in `quickshell/Theme.qml`.
+
+## Passwords, Wi-Fi and the keyring
+
+**Wi-Fi / wired passwords:** let NetworkManager keep them itself (`psk-flags=0`,
+`802-1x.password-flags=0`). They live in root-only files under
+`/etc/NetworkManager/system-connections/`, connect in any session (even before
+login) and need no keyring or tray applet. Networks saved under Plasma often
+keep the password in KDE Wallet instead (`flags=1`) — those never autoconnect
+here, because nothing in a Hyprland session hands the password to
+NetworkManager. To move them out of the wallet (no typing, passwords never
+shown): `scripts/wallet-to-nm.py --dry-run`, then without `--dry-run`.
+Check with:
+
+```bash
+nmcli -f 802-11-wireless-security.psk-flags,802-1x.password-flags connection show "<name>"
+```
+
+**Enterprise / university Wi-Fi (802.1x):** also set the server check
+(`802-1x.domain-suffix-match` and a CA certificate from your IT department),
+otherwise your login is sent to any access point using that network name.
+
+**Other apps' passwords (browsers etc.):** whichever keyring answers first on
+D-Bus gets them. `./install.sh --kwallet` (opt-in) makes that KDE Wallet
+instead of gnome-keyring; without the flag nothing changes.
 
 ## Keys (SUPER = Windows key)
 
@@ -146,6 +171,7 @@ quickshell/
 scripts/screenshot.sh grim + slurp + hyprpicker + wl-copy
 scripts/theme.sh      switch the colour theme (bar + rofi)
 scripts/logout.sh     clean logout: close apps, stop background clients, exit
+scripts/wallet-to-nm.py  one-off: move Wi-Fi passwords from KDE Wallet into NetworkManager
 cursors/
   Robot/              Breeze Light + steel-blue ring spinner (hyprcursor + XCursor)
   build_xcursor.py    rebuilds the XCursor part if you edit the spinner
