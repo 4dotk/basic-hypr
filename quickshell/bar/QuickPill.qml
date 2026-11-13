@@ -1,11 +1,16 @@
 // ---------------------------------------------------------
 // QUICK PILL  — right edge of the bar: a row of status icons.
-//   network · bluetooth · sound · battery · power
+//   network · bluetooth · sound · battery
+// (power has its own pill at the left edge: bar/PowerPill.qml)
 // Each icon opens its own dropdown (no shared panel, no tabs); the name is
-// the bar's `open` value: "network", "bluetooth", "sound", "battery", "power".
-// Bluetooth / battery icons only show when the machine has them.
+// the bar's `open` value: "network", "bluetooth", "sound", "battery".
+// Bluetooth / battery icons only show when the machine has them; the battery
+// also shows its percentage (fixed width for two digits, right-aligned, like
+// the stats; at 100 % it is one character wider).
 // The mic only lives inside the sound mixer, never as an icon here.
-// Scroll on the resting pill: default output volume ±5 % (the clock pill shows the OSD).
+// The icons always stay; a dropdown slides out underneath as a drawer
+// (bar/Pill.qml), flush with the right edge, and its icon turns accent.
+// Scroll on the icons: default output volume ±5 % (the clock pill shows the OSD).
 // ---------------------------------------------------------
 
 import QtQuick
@@ -19,17 +24,17 @@ Pill {
     signal request(string panel)            // ask the bar to open (or toggle) a panel
 
     // the dropdowns this pill owns; open === one of these means it's expanded
-    readonly property var panels: ["network", "bluetooth", "sound", "battery", "power"]
+    readonly property var panels: ["network", "bluetooth", "sound", "battery"]
     readonly property bool expanded: panels.includes(open)
     readonly property int inset: 6           // extra room around a dropdown, on top of the pill's padding
 
-    view: !expanded ? idleView
-        : open === "network" ? networkView
-        : open === "bluetooth" ? bluetoothView
-        : open === "sound" ? soundView
-        : open === "battery" ? batteryView
-        : powerView
-    flat: !expanded
+    view: idleView
+    drawer: !expanded ? null
+          : open === "network" ? networkView
+          : open === "bluetooth" ? bluetoothView
+          : open === "sound" ? soundView
+          : batteryView
+    drawerAlign: "right"
 
     // scan for wifi only while its list is open; stop bluetooth discovery on close
     Binding { target: Net; property: "scanning"; value: true; when: root.open === "network" }
@@ -38,7 +43,7 @@ Pill {
     // ---- resting: one icon per dropdown ----
     View {
         id: idleView
-        shown: !root.expanded
+        shown: true
         implicitWidth: icons.implicitWidth
         implicitHeight: icons.implicitHeight
 
@@ -46,19 +51,20 @@ Pill {
             id: icons
             spacing: 14
 
-            Icon { panel: "network";   SvgIcon { name: Net.icon; color: Net.online ? Theme.fg : Theme.fgDim } }
-            Icon { panel: "bluetooth"; visible: Bt.present; SvgIcon { name: Bt.icon; color: Bt.on ? Theme.fg : Theme.fgDim } }
-            Icon { panel: "sound";     SvgIcon { name: Theme.volumeIcon(Audio.volume, Audio.muted); color: Audio.muted ? Theme.fgDim : Theme.fg } }
+            Icon { panel: "network";   SvgIcon { name: Net.icon; color: root.open === "network" ? Theme.accent : Net.online ? Theme.fg : Theme.fgDim } }
+            Icon { panel: "bluetooth"; visible: Bt.present; SvgIcon { name: Bt.icon; color: root.open === "bluetooth" ? Theme.accent : Bt.on ? Theme.fg : Theme.fgDim } }
+            Icon { panel: "sound";     SvgIcon { name: Theme.volumeIcon(Audio.volume, Audio.muted); color: root.open === "sound" ? Theme.accent : Audio.muted ? Theme.fgDim : Theme.fg } }
             Icon {
                 panel: "battery"
                 visible: Battery.present
-                implicitWidth: bat.implicitWidth + (badge.visible ? badge.size / 2 : 0)
+                implicitWidth: percent.x + percent.width
+                readonly property color tint: root.open === "battery" ? Theme.accent : Battery.low ? Theme.urgent : Theme.fg
                 BatteryIcon {
                     id: bat
                     anchors.verticalCenter: parent.verticalCenter
                     level: Battery.level
                     charging: Battery.charging
-                    color: Battery.low ? Theme.urgent : Theme.fg
+                    color: parent.tint
                 }
                 // power mode badge on the battery's bottom-right corner (none while balanced),
                 // on a pill-coloured disc so it stays readable over the glyph
@@ -79,8 +85,19 @@ Pill {
                     x: bat.width - size / 2
                     y: bat.height - size + 2
                 }
+                // percentage, as wide as "99%" so the pill keeps its width
+                Label {
+                    id: percent
+                    x: bat.width + (badge.visible ? badge.size / 2 : 0) + 4
+                    anchors.verticalCenter: parent.verticalCenter
+                    width: Math.ceil(Math.max(implicitWidth, widest.advanceWidth))
+                    horizontalAlignment: Text.AlignRight
+                    text: Math.round(Battery.level * 100) + "%"
+                    color: parent.tint
+                    font.pixelSize: Theme.smallSize
+                    TextMetrics { id: widest; font: percent.font; text: "99%" }
+                }
             }
-            Icon { panel: "power";     SvgIcon { name: "power" } }
         }
     }
 
@@ -101,46 +118,40 @@ Pill {
         }
     }
 
-    // ---- dropdowns ----
-    View {
-        id: networkView
-        shown: root.open === "network"
-        implicitWidth: network.implicitWidth + root.inset * 2
-        implicitHeight: network.implicitHeight + root.inset * 2
-        NetworkPanel { id: network; anchors.centerIn: parent }
-    }
-    View {
-        id: bluetoothView
-        shown: root.open === "bluetooth"
-        implicitWidth: bluetooth.implicitWidth + root.inset * 2
-        implicitHeight: bluetooth.implicitHeight + root.inset * 2
-        BluetoothPanel { id: bluetooth; anchors.centerIn: parent }
-    }
-    View {
-        id: soundView
-        shown: root.open === "sound"
-        implicitWidth: sound.implicitWidth + root.inset * 2
-        implicitHeight: sound.implicitHeight + root.inset * 2
-        SoundPanel { id: sound; anchors.centerIn: parent }
-    }
-    View {
-        id: batteryView
-        shown: root.open === "battery"
-        implicitWidth: battery.implicitWidth + root.inset * 2
-        implicitHeight: battery.implicitHeight + root.inset * 2
-        BatteryPanel { id: battery; anchors.centerIn: parent }
-    }
-    View {
-        id: powerView
-        shown: root.open === "power"
-        implicitWidth: power.implicitWidth + root.inset * 2
-        implicitHeight: power.implicitHeight + root.inset * 2
-        PowerPanel { id: power; anchors.centerIn: parent; onDone: root.request("power") }
-    }
+    // ---- dropdowns: drawers under the icons ----
+    drawers: [
+        View {
+            id: networkView
+            shown: root.open === "network"
+            implicitWidth: network.implicitWidth + root.inset * 2
+            implicitHeight: network.implicitHeight + root.inset * 2
+            NetworkPanel { id: network; anchors.centerIn: parent }
+        },
+        View {
+            id: bluetoothView
+            shown: root.open === "bluetooth"
+            implicitWidth: bluetooth.implicitWidth + root.inset * 2
+            implicitHeight: bluetooth.implicitHeight + root.inset * 2
+            BluetoothPanel { id: bluetooth; anchors.centerIn: parent }
+        },
+        View {
+            id: soundView
+            shown: root.open === "sound"
+            implicitWidth: sound.implicitWidth + root.inset * 2
+            implicitHeight: sound.implicitHeight + root.inset * 2
+            SoundPanel { id: sound; anchors.centerIn: parent }
+        },
+        View {
+            id: batteryView
+            shown: root.open === "battery"
+            implicitWidth: battery.implicitWidth + root.inset * 2
+            implicitHeight: battery.implicitHeight + root.inset * 2
+            BatteryPanel { id: battery; anchors.centerIn: parent }
+        }
+    ]
 
-    // scroll anywhere on the resting pill: volume ±5 %
+    // scroll on the icons: volume ±5 % (the head only; a drawer has its own sliders)
     WheelHandler {
-        enabled: !root.expanded
         acceptedDevices: PointerDevice.Mouse | PointerDevice.TouchPad
         onWheel: e => {
             if (e.angleDelta.y === 0) return;

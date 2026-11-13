@@ -2,11 +2,12 @@
 // BAR  — one per monitor: a full-width, invisible layer at the top that
 // holds the pills.
 //
-//   [workspaces][stats]        [clock]        [media][quick]
+//   [power][workspaces][stats]      [clock]      [media][quick][bell]
 //
 // `mask` makes only the pills clickable; the empty rest of the strip
-// lets clicks through to the windows below. Pills grow downward into
-// panels inside this strip, so it is taller than the resting pills.
+// lets clicks through to the windows below. Panels slide out under their
+// pill as drawers (bar/Pill.qml) inside this strip, so it is taller than
+// the resting pills.
 // Only one panel is open at a time (`open`); clicking anywhere outside
 // the bar closes it.
 //
@@ -31,7 +32,7 @@ PanelWindow {
     readonly property HyprlandMonitor monitor: Hyprland.monitorFor(screen)
     readonly property bool focused: Hyprland.focusedMonitor === monitor
 
-    property string open: ""              // "calendar", "clocks", a quick-pill dropdown ("network", "sound", …) or ""
+    property string open: ""              // "calendar", "clocks", "power", a quick-pill dropdown ("network", "sound", …) or ""
     readonly property bool hidden: BarState.hidden
     onHiddenChanged: if (hidden) open = ""
 
@@ -48,11 +49,16 @@ PanelWindow {
 
     // only pills that are on screen are clickable
     mask: Region {
+        Region { item: power.visible ? power : null }
+        Region { item: power.visible ? power.drawerBox : null }
         Region { item: workspaces.visible ? workspaces : null }
         Region { item: stats.visible ? stats : null }
         Region { item: clock.visible ? clock : null }
+        Region { item: clock.visible ? clock.drawerBox : null }
         Region { item: media.visible ? media : null }
         Region { item: quick.visible ? quick : null }
+        Region { item: quick.visible ? quick.drawerBox : null }
+        Region { item: notif.visible ? notif : null }
     }
 
     // while a panel is open, a click anywhere outside the bar closes it
@@ -69,10 +75,17 @@ PanelWindow {
         function onOpenPanel(name) { if (bar.focused && !bar.hidden) bar.open = bar.open === name ? "" : name; }
     }
 
-    // ---- left ----
+    // ---- left: power at the edge, then workspaces and stats ----
+    PowerPill {
+        id: power
+        x: Theme.gutter
+        shown: !bar.hidden
+        open: bar.open
+        onRequest: panel => bar.open = (bar.open === panel ? "" : panel)
+    }
     WorkspacesPill {
         id: workspaces
-        x: Theme.gutter
+        x: power.x + power.width + Theme.spacing
         monitor: bar.monitor
         shown: !bar.hidden
     }
@@ -90,10 +103,10 @@ PanelWindow {
         open: bar.open
         onRequest: panel => bar.open = (bar.open === panel ? "" : panel)
         // while hidden, only pops in for the OSD and notifications
-        shown: !bar.hidden || mode === "osd" || mode === "notif"
+        shown: !bar.hidden || mode === "osd" || under === "notif"
     }
 
-    // ---- right: media, then quick settings at the edge ----
+    // ---- right: media, quick settings, then the bell at the edge ----
     MediaPill {
         id: media
         x: quick.x - Theme.spacing - width
@@ -101,9 +114,14 @@ PanelWindow {
     }
     QuickPill {
         id: quick
-        x: bar.width - Theme.gutter - width
+        x: notif.x - Theme.spacing - width
         shown: !bar.hidden
         open: bar.open
         onRequest: panel => bar.open = (bar.open === panel ? "" : panel)
+    }
+    NotifPill {
+        id: notif
+        x: bar.width - Theme.gutter - width
+        shown: !bar.hidden
     }
 }

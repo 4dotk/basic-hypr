@@ -1,5 +1,7 @@
 // ---------------------------------------------------------
 // OSD  — volume or brightness level after a media key.
+// `fitWidth` > 0: be exactly that wide; the level bar takes whatever the
+// icon and percentage leave. `fitHeight` > 0: be that tall, row centred.
 // ---------------------------------------------------------
 
 import QtQuick
@@ -12,6 +14,8 @@ View {
     readonly property bool isVolume: Osd.kind === "volume"
     readonly property real level: isVolume ? Audio.volume : Brightness.level
     readonly property bool muted: isVolume && Audio.muted
+    property real fitWidth: 0
+    property real fitHeight: 0
 
     readonly property string icon: {
         if (!isVolume) return Theme.glyph.brightness;
@@ -22,10 +26,11 @@ View {
     }
 
     implicitWidth: row.implicitWidth
-    implicitHeight: row.implicitHeight
+    implicitHeight: fitHeight > 0 ? fitHeight : row.implicitHeight
 
     Row {
         id: row
+        anchors.verticalCenter: parent.verticalCenter
         spacing: 12
 
         Label {
@@ -40,7 +45,9 @@ View {
         // bar
         Rectangle {
             anchors.verticalCenter: parent.verticalCenter
-            width: 200
+            width: root.fitWidth > 0
+                   ? Math.max(40, root.fitWidth - (Theme.iconSize + 6) - 40 - row.spacing * 2)
+                   : 200
             height: 6
             radius: 3
             color: Theme.bgAlt
