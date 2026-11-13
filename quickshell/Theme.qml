@@ -110,6 +110,81 @@ Singleton {
         plus:       String.fromCodePoint(0xf0415),  // md-plus
         cpu:        String.fromCodePoint(0xf0ee0),  // md-cpu_64_bit
         memory:     String.fromCodePoint(0xf035b),  // md-memory
-        temp:       String.fromCodePoint(0xf050f)   // md-thermometer
+        temp:       String.fromCodePoint(0xf050f),  // md-thermometer
+        mic:        String.fromCodePoint(0xf036c),  // md-microphone
+        micOff:     String.fromCodePoint(0xf036d),  // md-microphone_off
+        speaker:    String.fromCodePoint(0xf04c3),  // md-speaker
+        headphones: String.fromCodePoint(0xf02cb),  // md-headphones
+        dot:        "\u25cf",                      // ● marks the default device
+        app:        String.fromCodePoint(0xf08c6),  // md-application
+        wifi1:      String.fromCodePoint(0xf091f),  // md-wifi_strength_1
+        wifi2:      String.fromCodePoint(0xf0922),  // md-wifi_strength_2
+        wifi3:      String.fromCodePoint(0xf0925),  // md-wifi_strength_3
+        wifi4:      String.fromCodePoint(0xf0928),  // md-wifi_strength_4
+        wifiNone:   String.fromCodePoint(0xf092f),  // md-wifi_strength_outline (on, not connected)
+        wifiOff:    String.fromCodePoint(0xf092e),  // md-wifi_strength_off_outline
+        ethernet:   String.fromCodePoint(0xf0200),  // md-ethernet
+        lock:       String.fromCodePoint(0xf033e),  // md-lock (secured network)
+        bt:         String.fromCodePoint(0xf00af),  // md-bluetooth
+        btOff:      String.fromCodePoint(0xf00b2),  // md-bluetooth_off
+        btOn:       String.fromCodePoint(0xf00b1),  // md-bluetooth_connect (a device is connected)
+        mouse:      String.fromCodePoint(0xf037d),  // md-mouse
+        keyboard:   String.fromCodePoint(0xf030c),  // md-keyboard
+        phone:      String.fromCodePoint(0xf011c),  // md-cellphone
+        device:     String.fromCodePoint(0xf0fb0),  // md-devices
+        power:      String.fromCodePoint(0xf0425),  // md-power
+        lockScreen: String.fromCodePoint(0xf0341),  // md-lock_outline
+        logout:     String.fromCodePoint(0xf0343),  // md-logout
+        sleep:      String.fromCodePoint(0xf04b2),  // md-sleep
+        reboot:     String.fromCodePoint(0xf0709),  // md-restart
+        saver:      String.fromCodePoint(0xf032a),  // md-leaf
+        balanced:   String.fromCodePoint(0xf05d1),  // md-scale_balance
+        perf:       String.fromCodePoint(0xf04c5),  // md-speedometer
+        health:     String.fromCodePoint(0xf05f6),  // md-heart_pulse
+        search:     String.fromCodePoint(0xf0349),  // md-magnify
+        close:      String.fromCodePoint(0xf0156)   // md-close
     })
+
+    // battery glyphs, 0 % .. 100 % in steps of 10 (md-battery_outline, _10 … _90, md-battery)
+    readonly property var batteryGlyphs: [0xf008e, 0xf007a, 0xf007b, 0xf007c, 0xf007d, 0xf007e,
+                                          0xf007f, 0xf0080, 0xf0081, 0xf0082, 0xf0079]
+    // charging: md-battery_charging_outline, _charging_10 … _charging_90, _charging_100
+    readonly property var chargingGlyphs: [0xf089f, 0xf089c, 0xf0086, 0xf0087, 0xf0088, 0xf089d,
+                                           0xf0089, 0xf089e, 0xf008a, 0xf008b, 0xf0085]
+
+    // battery glyph for a level (0–1)
+    function batteryGlyph(level, charging) {
+        const i = Math.max(0, Math.min(10, Math.round(level * 10)));
+        return String.fromCodePoint((charging ? chargingGlyphs : batteryGlyphs)[i]);
+    }
+
+    // ---- icon names (quickshell/icons/*.svg, shown with SvgIcon) ----
+    function volumeIcon(level, muted) {
+        if (muted || level <= 0) return "vol-off";
+        if (level < 0.34) return "vol-low";
+        if (level < 0.67) return "vol-medium";
+        return "vol-high";
+    }
+    function wifiIcon(strength) {
+        if (strength < 0.25) return "wifi-1";
+        if (strength < 0.5)  return "wifi-2";
+        if (strength < 0.75) return "wifi-3";
+        return "wifi-4";
+    }
+
+    // wifi glyph for a signal strength (0–1)
+    function wifiGlyph(strength) {
+        if (strength < 0.25) return glyph.wifi1;
+        if (strength < 0.5)  return glyph.wifi2;
+        if (strength < 0.75) return glyph.wifi3;
+        return glyph.wifi4;
+    }
+
+    // speaker glyph for a volume level (0–1): high / medium / low / off
+    function volumeGlyph(level, muted) {
+        if (muted || level <= 0) return glyph.volOff;
+        if (level < 0.34) return glyph.volLow;
+        if (level < 0.67) return glyph.volMedium;
+        return glyph.volHigh;
+    }
 }

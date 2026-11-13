@@ -2,7 +2,7 @@
 // BAR  — one per monitor: a full-width, invisible layer at the top that
 // holds the pills.
 //
-//   [workspaces][stats]        [clock] [media]        [quick — phase 2]
+//   [workspaces][stats]        [clock]        [media][quick]
 //
 // `mask` makes only the pills clickable; the empty rest of the strip
 // lets clicks through to the windows below. Pills grow downward into
@@ -31,7 +31,7 @@ PanelWindow {
     readonly property HyprlandMonitor monitor: Hyprland.monitorFor(screen)
     readonly property bool focused: Hyprland.focusedMonitor === monitor
 
-    property string open: ""              // "calendar", "clocks" or "" (later: quick tabs)
+    property string open: ""              // "calendar", "clocks", a quick-pill dropdown ("network", "sound", …) or ""
     readonly property bool hidden: BarState.hidden
     onHiddenChanged: if (hidden) open = ""
 
@@ -43,8 +43,8 @@ PanelWindow {
 
     WlrLayershell.namespace: "quickshell-bar"   // used by the blur rule in hypr/dots/windows.lua
     WlrLayershell.layer: WlrLayer.Top
-    // keyboard only while the timer panel is open (to type into hh:mm:ss)
-    WlrLayershell.keyboardFocus: open === "clocks" ? WlrKeyboardFocus.OnDemand : WlrKeyboardFocus.None
+    // keyboard only while the timer panel (hh:mm:ss) or the network list (Wi-Fi password) is open
+    WlrLayershell.keyboardFocus: open === "clocks" || open === "network" ? WlrKeyboardFocus.OnDemand : WlrKeyboardFocus.None
 
     // only pills that are on screen are clickable
     mask: Region {
@@ -52,6 +52,7 @@ PanelWindow {
         Region { item: stats.visible ? stats : null }
         Region { item: clock.visible ? clock : null }
         Region { item: media.visible ? media : null }
+        Region { item: quick.visible ? quick : null }
     }
 
     // while a panel is open, a click anywhere outside the bar closes it
@@ -65,6 +66,7 @@ PanelWindow {
     Connections {
         target: Panel
         function onToggle() { if (bar.focused && !bar.hidden) bar.open = bar.open ? "" : "clocks"; }
+        function onOpenPanel(name) { if (bar.focused && !bar.hidden) bar.open = bar.open === name ? "" : name; }
     }
 
     // ---- left ----
@@ -91,10 +93,17 @@ PanelWindow {
         shown: !bar.hidden || mode === "osd" || mode === "notif"
     }
 
-    // ---- right of the clock (moves next to the quick pill in phase 2) ----
+    // ---- right: media, then quick settings at the edge ----
     MediaPill {
         id: media
-        x: bar.width - Theme.gutter - width
+        x: quick.x - Theme.spacing - width
         hidden: bar.hidden
+    }
+    QuickPill {
+        id: quick
+        x: bar.width - Theme.gutter - width
+        shown: !bar.hidden
+        open: bar.open
+        onRequest: panel => bar.open = (bar.open === panel ? "" : panel)
     }
 }

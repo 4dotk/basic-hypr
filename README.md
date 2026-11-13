@@ -26,7 +26,6 @@ Running it again is safe.
 | `quickshell/` | `~/.config/quickshell` |
 | `scripts/screenshot.sh` | `~/.local/scripts/screenshot.sh` |
 | `scripts/theme.sh` | `~/.local/scripts/theme.sh` |
-| `scripts/logout.sh` | `~/.local/scripts/logout.sh` |
 | `cursors/Robot/` | `~/.local/share/icons/Robot` and `~/.icons/Robot` (Plasma looks there) |
 
 ## Change these first
@@ -46,6 +45,7 @@ Fedora names; `install.sh` warns about anything missing but installs nothing.
 |---|---|
 | Desktop | `hyprland` `hyprpaper` `hyprpolkitagent` `kitty` `rofi` |
 | Bar | `quickshell` `brightnessctl` `lm_sensors` |
+| Quick pill (network, Bluetooth, battery, power) | `NetworkManager` `bluez` `upower` `tuned-ppd` (or `power-profiles-daemon`) `hyprlock` |
 | Clean logout | `hyprshutdown` (optional — without it apps aren't asked to close first) |
 | Media keys | `wireplumber` `brightnessctl` `playerctl` |
 | Screenshots | `grim` `slurp` `hyprpicker` `wl-clipboard` `jq` `xdg-user-dirs` |
@@ -166,11 +166,12 @@ kitty/kitty.conf
 quickshell/
   shell.qml           entry point, one bar per monitor
   Theme.qml           colours/sizes (same palette as rofi)
-  services/           audio, brightness, media, notifications, osd, stats, timer, stopwatch
+  services/           audio, network (Net), bluetooth (Bt), battery, brightness, media,
+                      notifications, osd, stats, timer, stopwatch
   bar/                the bar, one file per pill, and the views inside them
+  icons/              the quick pill's icons (own SVGs, tinted to the theme)
 scripts/screenshot.sh grim + slurp + hyprpicker + wl-copy
 scripts/theme.sh      switch the colour theme (bar + rofi)
-scripts/logout.sh     clean logout: close apps, stop background clients, exit
 scripts/wallet-to-nm.py  one-off: move Wi-Fi passwords from KDE Wallet into NetworkManager
 cursors/
   Robot/              Breeze Light + steel-blue ring spinner (hyprcursor + XCursor)
