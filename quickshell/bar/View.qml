@@ -9,6 +9,7 @@ import qs
 Item {
     property bool shown: false
     property bool detached: false   // as a drawer: a separate card below the pill (bar/Pill.qml)
+    property bool opaque: false     // as a detached card: fully opaque background (popups)
 
     anchors.centerIn: parent
     opacity: shown ? 1 : 0

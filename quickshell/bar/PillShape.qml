@@ -9,12 +9,16 @@
 // narrower, the head's corner rounds and the drawer's top curves in;
 // edges that line up run straight. Every radius shrinks to fit the room,
 // so the shape stays clean while the drawer grows from nothing.
-// drawerHeight 0 = a plain rounded pill, same as a Rectangle.
+// drawerHeight 0 = a plain rounded pill (its fill is a Rectangle).
 // drawerGap > 0: the drawer is a separate rounded card that far below the
-// head, no join.
+// head, no join; it is drawn with its own fill (`cardFill`).
 // neck: where the drawer sticks out past the head, the head's side runs on
 // this far below the head before curving out, so the drawer's top edge
 // clears the neighbouring pills. drawerHeight includes it.
+// joinLeft / joinRight (0–1): that side is joined to a bridge (bar/Bridge.qml)
+// on an empty workspace. At 1 its corners are square, its side border is gone
+// and the fill and top / bottom border run to the edge, so the pill and the
+// bridge read as one bar. With a drawer open only the head's top corners square.
 // ---------------------------------------------------------
 
 import QtQuick
@@ -33,7 +37,19 @@ Shape {
     property real radius
     property real border
     property color fill
+    property color cardFill: fill           // a detached card's fill (popups: opaque)
     property color stroke
+    property real joinLeft: 0
+    property real joinRight: 0
+    // the bar's shared fill layer (Bar.qml `backdrop`) and the pill this shape
+    // belongs to; with both set, the plain fill is drawn solid in that layer
+    property Item backdrop: null
+    property Item host: null
+    readonly property bool layered: backdrop !== null && host !== null
+
+    // no drawer joined to the head: drawn as a fill plus separate border pieces,
+    // so a joined side can drop its border
+    readonly property bool plain: dh < 0.5 || drawerGap > 0
 
     // the shape covers head and drawer together
     readonly property real minX:  Math.min(0, drawerX)
@@ -46,12 +62,113 @@ Shape {
 
     preferredRendererType: Shape.CurveRenderer   // antialiased edges without a multisample layer
 
+    // plain head's fill: a Rectangle. Layered (the bar passes its backdrop), it
+    // is solid and reparented into the bar's shared fill layer, which fades as
+    // a whole to the theme's opacity; a joined side reaches 1 px into its
+    // bridge. Solid fills overlapping inside one layer leave no seam at any
+    // display scale (two see-through edges meeting between screen pixels do).
+    // Otherwise it sits under this shape's border (z -1).
+    Rectangle {
+        parent: root.layered ? root.backdrop : root
+        visible: root.plain && (!root.layered || root.host.visible)
+        opacity: root.layered ? root.host.opacity : 1
+        z: -1
+        readonly property real padL: root.layered && root.joinLeft > 0.999 ? 1 : 0
+        readonly property real padR: root.layered && root.joinRight > 0.999 ? 1 : 0
+        x: (root.layered ? root.host.x : -root.minX) - padL
+        y: root.layered ? root.host.y : 0
+        width: root.headWidth + padL + padR
+        height: root.headHeight
+        color: root.layered ? Qt.rgba(root.fill.r, root.fill.g, root.fill.b, 1) : root.fill
+        antialiasing: true
+        readonly property real cap: Math.min(root.headWidth, root.headHeight) / 2
+        topLeftRadius:     Math.min(cap, root.radius * (1 - root.joinLeft))
+        bottomLeftRadius:  Math.min(cap, root.radius * (1 - root.joinLeft))
+        topRightRadius:    Math.min(cap, root.radius * (1 - root.joinRight))
+        bottomRightRadius: Math.min(cap, root.radius * (1 - root.joinRight))
+    }
+    // head + drawer as one path (only while a drawer is joined)
     ShapePath {
-        fillColor: root.fill
+        fillColor: root.plain ? "transparent" : root.fill
+        strokeColor: root.plain ? "transparent" : root.stroke
+        strokeWidth: root.plain ? -1 : root.border
+        joinStyle: ShapePath.RoundJoin
+        PathSvg { path: root.plain ? "" : root.outline() }
+    }
+    // plain head's border: top + bottom with their corners, then each side on its own
+    ShapePath {
+        fillColor: "transparent"
+        strokeColor: root.stroke
+        strokeWidth: root.border
+        capStyle: ShapePath.FlatCap
+        joinStyle: ShapePath.RoundJoin
+        PathSvg { path: root.plain ? root.headEdges() : "" }
+    }
+    ShapePath {
+        fillColor: "transparent"
+        strokeColor: Qt.rgba(root.stroke.r, root.stroke.g, root.stroke.b, root.stroke.a * (1 - root.joinRight))
+        strokeWidth: root.border
+        capStyle: ShapePath.FlatCap
+        PathSvg { path: root.plain ? root.headSide(true) : "" }
+    }
+    ShapePath {
+        fillColor: "transparent"
+        strokeColor: Qt.rgba(root.stroke.r, root.stroke.g, root.stroke.b, root.stroke.a * (1 - root.joinLeft))
+        strokeWidth: root.border
+        capStyle: ShapePath.FlatCap
+        PathSvg { path: root.plain ? root.headSide(false) : "" }
+    }
+
+    // ---- plain head pieces ----
+    // corner radii per side (0 when fully joined), clamped to the head's size
+    function headRadii() {
+        const h = border / 2;
+        const r = Math.max(0, radius - h);
+        const cap = Math.max(0, Math.min((headHeight - border) / 2, (headWidth - border) / 2));
+        return { h: h, o: -minX,
+                 l: Math.min(cap, r * (1 - joinLeft)), r: Math.min(cap, r * (1 - joinRight)) };
+    }
+    // top edge (with its corners) and bottom edge (with its corners), sides left out;
+    // on a joined side the edges run half a border further, to meet the bridge's
+    function headEdges() {
+        const k = headRadii(), h = k.h;
+        const xl = k.o + h, xr = k.o + headWidth - h, y1 = h, y2 = headHeight - h;
+        if (xr - xl < 0.5) return "";
+        const a = (rad, x, y) => ` A ${rad} ${rad} 0 0 1 ${x} ${y}`;
+        const el = h * joinLeft * (k.l < 0.5 ? 1 : 0), er = h * joinRight * (k.r < 0.5 ? 1 : 0);
+        return (k.l > 0 ? `M ${xl} ${y1 + k.l}` : `M ${xl - el} ${y1}`)
+             + (k.l > 0 ? a(k.l, xl + k.l, y1) : "")
+             + ` L ${xr - k.r + er} ${y1}` + (k.r > 0 ? a(k.r, xr, y1 + k.r) : "")
+             + (k.r > 0 ? ` M ${xr} ${y2 - k.r}` + a(k.r, xr - k.r, y2) : ` M ${xr + er} ${y2}`)
+             + ` L ${xl + k.l - el} ${y2}` + (k.l > 0 ? a(k.l, xl, y2 - k.l) : "");
+    }
+    // one side's straight part, between its corners
+    function headSide(right) {
+        const k = headRadii(), h = k.h;
+        const x = right ? k.o + headWidth - h : k.o + h, rr = right ? k.r : k.l;
+        const y1 = h + rr, y2 = headHeight - h - rr;
+        return y2 - y1 < 0.5 ? "" : `M ${x} ${y1} L ${x} ${y2}`;
+    }
+    // a detached drawer: its own card, its own fill
+    ShapePath {
+        fillColor: root.cardFill
         strokeColor: root.stroke
         strokeWidth: root.border
         joinStyle: ShapePath.RoundJoin
-        PathSvg { path: root.outline() }
+        PathSvg { path: root.card() }
+    }
+
+    function card() {
+        if (drawerGap <= 0 || dh < 0.5) return "";
+        const h = border / 2, o = -minX, r = Math.max(0, radius - h);
+        const x1 = o + drawerX + h, x2 = o + drawerX + drawerWidth - h;
+        const y1 = headHeight + drawerGap + h, y2 = headHeight + drawerGap + dh - h;
+        const rr = Math.max(0, Math.min(r, (y2 - y1) / 2, (x2 - x1) / 2));
+        const a = (x, y) => ` A ${rr} ${rr} 0 0 1 ${x} ${y}`;
+        return `M ${x1 + rr} ${y1} L ${x2 - rr} ${y1}` + a(x2, y1 + rr)
+             + ` L ${x2} ${y2 - rr}` + a(x2 - rr, y2)
+             + ` L ${x1 + rr} ${y2}` + a(x1, y2 - rr)
+             + ` L ${x1} ${y1 + rr}` + a(x1 + rr, y1) + " Z";
     }
 
     // SVG path, clockwise. The stroke is centred on the path, so the path runs
@@ -76,8 +193,7 @@ Shape {
         const headRect = rect(hl, top, hr, headHeight - h);
 
         if (dh < 0.5) return headRect;                     // no drawer
-        if (drawerGap > 0)                                 // separate card below
-            return headRect + " " + rect(dl, headHeight + drawerGap + h, dr, headHeight + drawerGap + dh - h);
+        if (drawerGap > 0) return headRect;                // separate card: drawn by card()
 
         const bottom = headHeight + dh - h;
         const rb = Math.min(r, dh / 2, (dr - dl) / 2);                    // drawer's bottom corners
@@ -87,7 +203,9 @@ Shape {
         // and no taller than the drawer is so far
         const join = step => Math.min(r, step / 2, (dh - n) / 2);
 
-        let p = `M ${hl + r} ${top}` + L(hr - r, top) + a(r, 1, hr, top + r);
+        // the head's top corners square on a joined side
+        const tl = r * (1 - joinLeft), tr = r * (1 - joinRight);
+        let p = `M ${hl + tl} ${top}` + L(hr - tr, top) + a(tr, 1, hr, top + tr);
 
         // right side, going down
         const sr = dr - hr;
@@ -110,7 +228,7 @@ Shape {
             const k = join(-sl);
             p += L(dl, hb + k) + a(k, 0, dl - k, hb) + L(hl + k, hb) + a(k, 1, hl, hb - k);
         }
-        p += L(hl, top + r) + a(r, 1, hl + r, top) + " Z";
+        p += L(hl, top + tl) + a(tl, 1, hl + tl, top) + " Z";
         return p;
     }
 }

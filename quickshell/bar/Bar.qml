@@ -13,7 +13,17 @@
 //
 // SUPER + F hides the bar (services/BarState.qml): the pills pop out left to
 // right, the reserved strip goes away so tiled windows grow into it, and only
-// the clock pill pops back in for the OSD / notifications.
+// the clock pill pops back in for the OSD and the bell for notification popups.
+//
+// Empty workspace (no windows on this monitor's active workspace): bridges
+// (bar/Bridge.qml) fill the gaps between neighbouring pills and the facing
+// corners go square, so the pills read as one full-width bar. When a window
+// opens the bridges split like goo (sag, strand, snap, drips pulled back into
+// the pills), starting next to the clock and spreading outwards; closing the
+// last window sends tendrils out that join up again. Each bridge drives the
+// facing pills' joinLeft / joinRight.
+// The clock stays joined while the OSD shows: on a full bar the OSD keeps
+// the bar's height and only widens, shortening the bridges next to it.
 // ---------------------------------------------------------
 
 import QtQuick
@@ -36,6 +46,45 @@ PanelWindow {
     readonly property bool hidden: BarState.hidden
     onHiddenChanged: if (hidden) open = ""
 
+    // ---- empty workspace: one full bar ----
+    readonly property bool empty: (monitor?.activeWorkspace?.toplevels.values.length ?? 0) === 0
+    readonly property bool merged: empty && !hidden
+    Component.onCompleted: Hyprland.refreshToplevels()
+
+    // the pills on screen, left to right; bridge i sits between row[i] and row[i + 1]
+    readonly property var row: [workspaces, stats, clock, media, quick, notif].filter(p => p.shown)
+    function linked(i) {
+        const a = row[i], b = row[i + 1];
+        return merged && !!a && !!b;
+    }
+    // the gaps next to the clock go first, then outwards
+    function delayAt(i) {
+        const c = row.indexOf(clock);
+        if (c < 0) return 0;
+        return (i < c ? c - 1 - i : i - c) * 40;
+    }
+    // shared fill layer: pill and bridge fills are drawn solid in here,
+    // overlapping at joins, and the layer fades as a whole to the theme's
+    // opacity, so joins have no seam at fractional display scales (1.2 here)
+    Item {
+        id: fillLayer
+        anchors.fill: parent
+        layer.enabled: true
+        opacity: Theme.bg.a
+    }
+
+    Repeater {
+        model: Math.max(0, bar.row.length - 1)
+        Bridge {
+            required property int index
+            leftPill: bar.row[index]
+            rightPill: bar.row[index + 1]
+            on: bar.linked(index)
+            delay: bar.delayAt(index)
+            backdrop: fillLayer
+        }
+    }
+
     // ---- the layer surface ----
     anchors { top: true; left: true; right: true }
     implicitHeight: 540                   // room for the tallest panel (6-week calendar)
@@ -57,6 +106,7 @@ PanelWindow {
         Region { item: quick.visible ? quick : null }
         Region { item: quick.visible ? quick.drawerBox : null }
         Region { item: notif.visible ? notif : null }
+        Region { item: notif.visible ? notif.drawerBox : null }
     }
 
     // while a panel is open, a click anywhere outside the bar closes it
@@ -76,12 +126,14 @@ PanelWindow {
     // ---- left ----
     WorkspacesPill {
         id: workspaces
+        backdrop: fillLayer
         x: Theme.gutter
         monitor: bar.monitor
         shown: !bar.hidden
     }
     StatsPill {
         id: stats
+        backdrop: fillLayer
         x: workspaces.x + workspaces.width + Theme.spacing
         shown: !bar.hidden
     }
@@ -89,22 +141,26 @@ PanelWindow {
     // ---- centre ----
     ClockPill {
         id: clock
-        anchors.horizontalCenter: parent.horizontalCenter
+        backdrop: fillLayer
+        x: Math.round((bar.width - width) / 2)   // whole pixels: no seam when joined
         focused: bar.focused
+        merged: bar.merged
         open: bar.open
         onRequest: panel => bar.open = (bar.open === panel ? "" : panel)
-        // while hidden, only pops in for the OSD and notifications
-        shown: !bar.hidden || mode === "osd" || under === "notif"
+        // while hidden, only pops in for the OSD
+        shown: !bar.hidden || mode === "osd"
     }
 
     // ---- right: media, quick settings, then the bell at the edge ----
     MediaPill {
         id: media
+        backdrop: fillLayer
         x: quick.x - Theme.spacing - width
         hidden: bar.hidden
     }
     QuickPill {
         id: quick
+        backdrop: fillLayer
         x: notif.x - Theme.spacing - width
         shown: !bar.hidden
         open: bar.open
@@ -112,7 +168,12 @@ PanelWindow {
     }
     NotifPill {
         id: notif
+        backdrop: fillLayer
         x: bar.width - Theme.gutter - width
-        shown: !bar.hidden
+        focused: bar.focused
+        open: bar.open
+        onRequest: panel => bar.open = (bar.open === panel ? "" : panel)
+        // while hidden, only pops in for a notification popup
+        shown: !bar.hidden || popup
     }
 }

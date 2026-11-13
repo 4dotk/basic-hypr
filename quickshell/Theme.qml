@@ -101,6 +101,7 @@ Singleton {
         prev:       String.fromCodePoint(0xf04ae),  // md-skip_previous
         music:      String.fromCodePoint(0xf075a),  // md-music
         bell:       String.fromCodePoint(0xf009a),  // md-bell
+        bellOff:    String.fromCodePoint(0xf009b),  // md-bell_off (do not disturb)
         timer:      String.fromCodePoint(0xf051f),  // md-timer_sand
         stopwatch:  String.fromCodePoint(0xf006b),  // md-av_timer
         lap:        String.fromCodePoint(0xf023d),  // md-flag_outline

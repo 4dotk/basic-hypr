@@ -19,6 +19,9 @@
 // below the head instead (no join) — the clock's calendar and timer.
 // The pill's own size is the head's; the drawer hangs outside it, so pills
 // next to it don't move. `drawerBox` is the drawer's area (for the bar mask).
+// `joinLeft` / `joinRight` (0–1): that side meets a bridge on an empty
+// workspace; the bridge drives them while it animates (bar/Bridge.qml).
+// Width is whole pixels, so joined edges line up exactly with the bridge.
 // ---------------------------------------------------------
 
 import QtQuick
@@ -38,6 +41,9 @@ Item {
     property bool shown: true
     property color borderColor: Theme.line
     property int padX: Theme.pad                  // left/right padding (workspaces uses less)
+    property Item backdrop: null                  // the bar's shared fill layer (Bar.qml)
+    property real joinLeft: 0                     // set by the bridge next to it (bar/Bridge.qml)
+    property real joinRight: 0
     readonly property alias hovered: hover.hovered
     readonly property alias drawerBox: box
 
@@ -45,7 +51,7 @@ Item {
     property alias drawers: box.data              // drawer views
 
     y: shown ? Theme.gap : -(box.y + box.height) - Theme.gap
-    width:  Math.max(Theme.idleHeight, (view ? view.implicitWidth : 0) + padX * 2)
+    width:  Math.round(Math.max(Theme.idleHeight, (view ? view.implicitWidth : 0) + padX * 2))
     height: Math.max(Theme.idleHeight, (view ? view.implicitHeight : 0) + (flat ? 0 : Theme.pad * 2))
 
     // a joined drawer's neck: the head's sides run on this far before curving out
@@ -88,7 +94,12 @@ Item {
         radius: Theme.rounding
         border: Theme.border
         fill: Theme.bg
+        cardFill: pill.lastDrawer?.opaque ? Qt.rgba(Theme.bg.r, Theme.bg.g, Theme.bg.b, 1) : Theme.bg
         stroke: pill.borderColor
+        joinLeft: pill.joinLeft
+        joinRight: pill.joinRight
+        backdrop: pill.backdrop
+        host: pill
         Behavior on stroke { ColorAnimation { duration: Theme.fade } }
     }
 

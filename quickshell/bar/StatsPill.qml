@@ -3,8 +3,10 @@
 // Calm by default (grey icons, white numbers); amber when high:
 //   warning  CPU/RAM ≥ 70%, temp ≥ 70°   ·   critical (bold)  ≥ 90% / 85°
 // Each stat (icon + value) sits in a fixed slot sized for its widest value
-// ("100%", "00.0G", "100°"): the icon always stays 6 px from its number and
-// the pill never changes width. The first stat hugs the left of its slot, the
+// ("100%", "00.0G", "100°"): the icon always stays 7 px from its number and
+// the pill never changes width. Icons are trimmed to their drawn ink (the
+// thermometer glyph is narrow with empty space beside it), so the gaps
+// between stats look equal. The first stat hugs the left of its slot, the
 // last one the right, middle ones are centred — spare room only goes between
 // stats, so both ends of the pill have exactly the same padding.
 // CPU below 10% gets a leading zero (03%), so it always takes two digits.
@@ -45,10 +47,10 @@ Pill {
                     level: root.level(Stats.cpu, 0.7, 0.9)
                 }
                 Stat {
-                    align: temp.visible ? "center" : "right"     // last when there's no sensor
+                    align: temp.visible ? "center" : "right"
                     glyph: Theme.glyph.memory
-                    value: root.gib(Stats.memUsed) + "G"
-                    widest: "00.0G"
+                    value: root.gib(Stats.memUsed) + " G"
+                    widest: "00.0"
                     level: root.level(Stats.memory, 0.7, 0.9)
                 }
                 Stat {
@@ -84,7 +86,7 @@ Pill {
 
         anchors.verticalCenter: parent.verticalCenter
         implicitWidth: Math.ceil(Math.max(pair.implicitWidth,
-                                          icon.implicitWidth + pair.spacing + widestText.advanceWidth))
+                                          iconBox.width + pair.spacing + widestText.advanceWidth))
         implicitHeight: pair.implicitHeight
 
         Row {
@@ -93,15 +95,23 @@ Pill {
             x: stat.align === "left" ? 0
              : stat.align === "right" ? stat.width - width
              : Math.round((stat.width - width) / 2)
-            spacing: 6
+            spacing: 7
 
-            Label {
-                id: icon
+            // the icon, cut to its ink: no empty side bearings
+            Item {
+                id: iconBox
                 anchors.verticalCenter: parent.verticalCenter
-                text: stat.glyph
-                color: stat.level > 0 ? Theme.urgent : Theme.fgDim
-                font.pixelSize: Theme.iconSize
-                Behavior on color { ColorAnimation { duration: Theme.fade } }
+                width: Math.ceil(iconInk.tightBoundingRect.width)
+                height: icon.implicitHeight
+                Label {
+                    id: icon
+                    x: -Math.floor(iconInk.tightBoundingRect.x)
+                    text: stat.glyph
+                    color: stat.level > 0 ? Theme.urgent : Theme.fgDim
+                    font.pixelSize: Theme.iconSize
+                    Behavior on color { ColorAnimation { duration: Theme.fade } }
+                }
+                TextMetrics { id: iconInk; font: icon.font; text: stat.glyph }
             }
             Label {
                 id: valueLabel
