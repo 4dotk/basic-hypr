@@ -6,8 +6,8 @@ kitty terminal, a simple screenshot tool and the Robot cursor theme which is bas
 ## Install
 
 ```bash
-git clone <this repo> anywhere/you/like
-cd anywhere/you/like
+git clone https://github.com/4dotk/basic-hypr.git
+cd basic-hypr
 ./install.sh --dry-run   # see what will happen
 ./install.sh             # do it
 ./install.sh --kwallet   # optional: KDE Wallet as the password store
@@ -111,14 +111,19 @@ instead of gnome-keyring; without the flag nothing changes.
 | `SUPER + L` | lock (also after 5 min idle: dim at 2, lock at 5, screen off at 5.5, sleep at 15) |
 | `SUPER + M` | log out cleanly (closes apps first) |
 | `CTRL + ALT + Delete` | power screen: lock, log out, suspend, reboot, shut down (←/→ Enter, Esc) |
-| `SUPER + V` | float / tile window |
+| `SUPER + SHIFT + V` | float / tile window |
+| `SUPER + P` | pseudo-tile window |
+| `SUPER + J` | toggle split direction |
 | `SUPER + SHIFT + F` | fullscreen window (covers bar and gaps) |
 | `SUPER + F` | hide / show the bar (notifications and the OSD still pop in) |
 | `SUPER + 1…0`, `+ SHIFT` | go to / move window to workspace |
-| `SUPER + S` | scratchpad workspace |
+| `SUPER + S` / `+ SHIFT` | show the scratchpad / send window there |
+| `SUPER + scroll` | next / previous workspace |
+| `SUPER + drag` (left / right button) | move / resize window |
 | `Print` | screenshot: select a region (screen freezes while selecting) |
 | `SHIFT + Print` | screenshot: whole monitor |
 | `SUPER + Print` | screenshot: focused window |
+| media keys | volume, mute, mic mute, brightness, play / pause / next / previous (also on the lock screen) |
 
 Screenshots go to `~/Pictures/Screenshots` and the clipboard.
 
@@ -127,21 +132,56 @@ Screenshots go to `~/Pictures/Screenshots` and the clipboard.
 Separate pills along the top of each monitor:
 
 ```
-[1 2 3][cpu mem temp]        [time] [media]        [quick widgets — coming]
+[1 2 3 4][cpu mem temp]      [Fri 13 Nov  19:36]      [media][net bt vol bat][bell]
 ```
 
 | Pill | Shows | Mouse |
 |---|---|---|
 | workspaces | workspaces on this monitor, active highlighted | click: go there · scroll: next / previous |
 | stats | CPU %, used RAM, CPU temperature (`sensors`) every 2 s; amber when high (70% / 70°), bold at 90% / 85° | |
-| clock | date + time (+ running timer / stopwatch) | click time: timer / stopwatch · click date: calendar |
-| media | cover + title, only while something plays | hover: artist, progress, prev/play/next |
+| clock | date + time (+ running timer / stopwatch) | click date: calendar · click time: timer / stopwatch |
+| media | cover + title, only while something plays (and a few seconds after pausing) | hover: artist, progress, prev / play / next |
+| quick | network, Bluetooth, volume, battery % (Bluetooth / battery only when the machine has them) | click an icon: its own dropdown · scroll: volume ±5% |
+| bell | dot = unread, bell-off = do not disturb | click: notification center |
 
-The clock pill also shows the volume / brightness OSD (plain 5% steps) and,
-for now, notification popups (left click: open · right click: dismiss).
-Panels close when you click anywhere outside the bar.
+**Dropdowns** slide out under their pill as one shape with it (drawers); only
+one is open at a time and a click anywhere outside closes it.
 
-Quickshell is also the notification daemon, so don't run mako/dunst next to it.
+| Icon | Dropdown |
+|---|---|
+| network | wired status; Wi-Fi switch; networks by signal, connected first. Click: connect (password field for WPA / WPA3 personal) or disconnect. Enterprise (802.1x) networks are set up in `nm-connection-editor`. Scans only while open. |
+| Bluetooth | power switch; paired devices (connected first, battery %); scan button for nearby devices, click to pair + connect. No PIN pairing. |
+| volume | mixer: **Output** and **Mic** devices (click a name to make it the default, slider, mute) and **Apps** playing sound (per-app slider + mute) |
+| battery | level, time left / to full, health; power mode: Saver / Balanced / Performance (a small badge on the icon shows Saver / Performance) |
+
+**Clock cards:** the calendar (arrows or scroll change month, click the month
+to jump back to today) and Timer | Stopwatch (type or scroll the hh : mm : ss
+fields, Enter to start; stopwatch keeps the last 3 laps). Both keep running
+with the card closed. They hang a small gap below the clock.
+
+**OSD:** volume and brightness changes (keys, or any app via PipeWire) show a
+level bar in the clock pill for a moment, on the focused monitor.
+
+**Notifications:** Quickshell is the notification daemon, so don't run
+mako / dunst / swaync next to it. Popups come out of the bell one at a time
+(amber border = critical; critical ones stay until clicked). The center lists
+everything, newest first: click to open, right click to remove, **Clear** for
+all. **Do not disturb** stops popups, except critical ones. History is kept
+in memory, so a quickshell restart clears it.
+
+**Empty workspace:** with no windows on the workspace, the pills join into
+one full-width bar. Opening a window tears it back into pills (the long gaps
+next to the clock pull apart like goo, the short ones just open); closing the
+last window joins it again.
+
+**SUPER + F** hides the bar: the pills slide up and windows take the space;
+the OSD and notification popups still pop in.
+
+**Power screen** (`CTRL + ALT + Delete`): Lock, Log out, Suspend, Reboot,
+Shut down over the dimmed, blurred desktop. ←/→ or Tab to move, Enter to
+choose, Esc or a click outside to close. Log out / reboot / shut down first
+grow their tile to fill the screen; Esc while it grows cancels.
+
 Live reload on save doesn't always pick up changes (files in `bar/`, new files),
 so after editing restart it: `pkill -x qs; hyprctl dispatch 'hl.dsp.exec_cmd("qs")'`.
 Errors: `qs log`.
@@ -150,9 +190,12 @@ From a shell or a keybind:
 
 ```
 qs ipc call bar toggle            hide / show the bar · show · hide
-qs ipc call panel toggle          open/close the timer / stopwatch panel
+qs ipc call panel open network    open a dropdown: network · bluetooth · sound · battery · calendar · clocks
+qs ipc call panel toggle          open/close the timer / stopwatch card
+qs ipc call power toggle          the power screen
 qs ipc call timer start 25        timer: start 25 min · toggle · reset
 qs ipc call stopwatch toggle      stopwatch: toggle · lap · reset
+qs ipc call theme set basic       colour theme (theme.sh does this for you)
 ```
 
 ## Layout
