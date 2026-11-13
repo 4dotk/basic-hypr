@@ -27,7 +27,7 @@ Column {
     }
 
     readonly property var actions: [
-        { icon: "lock",   text: "Lock",      cmd: "pidof hyprlock || hyprlock" },
+        { icon: "lock",   text: "Lock",      cmd: "loginctl lock-session" },
         { icon: "logout", text: "Log out",   cmd: leave("Logging out...", "") },
         { icon: "sleep",  text: "Suspend",   cmd: "systemctl suspend" },
         { icon: "reboot", text: "Reboot",    cmd: leave("Restarting...", "systemctl reboot") },

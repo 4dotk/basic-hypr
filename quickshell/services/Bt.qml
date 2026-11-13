@@ -28,9 +28,8 @@ Singleton {
     readonly property var found: devices.filter(d => !d.paired && d.deviceName !== "")
     readonly property bool anyConnected: devices.some(d => d.connected)
 
-    readonly property string icon: !on ? "bt-off"
-        : anyConnected ? "bt-connected"
-        : "bt"
+    // off = the plain icon; the pill dims it
+    readonly property string icon: on && anyConnected ? "bt-connected" : "bt"
 
     function setOn(v) { if (adapter) adapter.enabled = v; }
     function setScanning(v) { if (adapter && adapter.enabled) adapter.discovering = v; }

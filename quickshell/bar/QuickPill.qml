@@ -52,7 +52,33 @@ Pill {
             Icon {
                 panel: "battery"
                 visible: Battery.present
-                BatteryIcon { anchors.centerIn: parent; level: Battery.level; charging: Battery.charging; color: Battery.low ? Theme.urgent : Theme.fg }
+                implicitWidth: bat.implicitWidth + (badge.visible ? badge.size / 2 : 0)
+                BatteryIcon {
+                    id: bat
+                    anchors.verticalCenter: parent.verticalCenter
+                    level: Battery.level
+                    charging: Battery.charging
+                    color: Battery.low ? Theme.urgent : Theme.fg
+                }
+                // power mode badge on the battery's bottom-right corner (none while balanced),
+                // on a pill-coloured disc so it stays readable over the glyph
+                Rectangle {
+                    visible: badge.visible
+                    anchors.centerIn: badge
+                    width: badge.size + 2
+                    height: width
+                    radius: width / 2
+                    color: Theme.bg
+                }
+                SvgIcon {
+                    id: badge
+                    visible: Battery.modeIcon !== ""
+                    name: Battery.modeIcon
+                    size: 10
+                    color: Theme.fg
+                    x: bat.width - size / 2
+                    y: bat.height - size + 2
+                }
             }
             Icon { panel: "power";     SvgIcon { name: "power" } }
         }

@@ -44,6 +44,7 @@ Fedora names; `install.sh` warns about anything missing but installs nothing.
 | Needed for | Packages |
 |---|---|
 | Desktop | `hyprland` `hyprpaper` `hyprpolkitagent` `kitty` `rofi` |
+| Lock screen + idle | `hyprlock` `hypridle` `brightnessctl` |
 | Bar | `quickshell` `brightnessctl` `lm_sensors` |
 | Quick pill (network, Bluetooth, battery, power) | `NetworkManager` `bluez` `upower` `tuned-ppd` (or `power-profiles-daemon`) `hyprlock` |
 | Clean logout | `hyprshutdown` (optional — without it apps aren't asked to close first) |
@@ -58,6 +59,7 @@ system's default sans / monospace font and icon theme are used instead.
 
 - [Hack Nerd Font](https://www.nerdfonts.com/font-downloads) — rofi
 - [JetBrainsMono Nerd Font](https://www.nerdfonts.com/font-downloads) — kitty
+- [Red Hat Display](https://github.com/RedHatOfficial/RedHatFont) (`redhat-display-fonts`) — lock screen
 - [Papirus](https://github.com/PapirusDevelopmentTeam/papirus-icon-theme) (`Papirus-Dark`) — rofi icons
 
 ## Themes
@@ -106,6 +108,7 @@ instead of gnome-keyring; without the flag nothing changes.
 |---|---|
 | `SUPER + Q` / `E` / `R` | terminal / file manager / launcher |
 | `SUPER + C` | close window |
+| `SUPER + L` | lock (also after 5 min idle: dim at 2, lock at 5, screen off at 5.5, sleep at 15) |
 | `SUPER + M` | log out cleanly (closes apps first) |
 | `SUPER + V` | float / tile window |
 | `SUPER + SHIFT + F` | fullscreen window (covers bar and gaps) |
@@ -157,6 +160,8 @@ qs ipc call stopwatch toggle      stopwatch: toggle · lap · reset
 hypr/
   hyprland.lua        entry point, just require()s the files in dots/
   hyprpaper.conf      wallpaper
+  hyprlock.conf       lock screen (wallpaper: ~/Pictures/Saved/ecorp.jpg)
+  hypridle.conf       idle: dim, lock, screen off, sleep
   dots/               one file per topic: monitors, input, keybindings, look…
 rofi/
   config.rasi         behaviour + @imports

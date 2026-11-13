@@ -3,7 +3,7 @@
 //   on/off switch
 //   Devices   paired ones, connected first (battery % when the device reports it);
 //             click to connect / disconnect
-//   Nearby    search button; new devices found while scanning, click to pair + connect
+//   Nearby    scan button; new devices found while scanning, click to pair + connect
 // No PIN agent: devices that ask for a PIN can't be paired from here.
 // ---------------------------------------------------------
 
@@ -64,13 +64,13 @@ Column {
         width: root.width
         topGap: true
         visible: Bt.on
-        // search icon: accent while scanning, click again to stop
-        IconButton { icon: "search"; size: Theme.iconSize; on: Bt.scanning; tint: Theme.fgDim; onClicked: Bt.setScanning(!Bt.scanning) }
+        // bluetooth-searching icon: accent while scanning, click again to stop
+        IconButton { icon: "bt-scan"; size: Theme.iconSize; on: Bt.scanning; tint: Theme.fgDim; onClicked: Bt.setScanning(!Bt.scanning) }
     }
     Label {
         x: 10
         visible: Bt.on && Bt.found.length === 0
-        text: Bt.scanning ? "Looking for devices…" : "Search to find new devices"
+        text: Bt.scanning ? "Looking for devices…" : "Scan to find new devices"
         color: Theme.fgDim
         font.pixelSize: Theme.smallSize
     }

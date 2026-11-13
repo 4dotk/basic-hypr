@@ -76,11 +76,11 @@ link cursors/Robot "$HOME/.icons/Robot"      # Plasma's cursor settings only loo
 # --- what's missing (warn only, installs nothing) -----------------------------
 echo; echo "checking dependencies"
 missing=()
-for cmd in Hyprland hyprpaper hyprpicker rofi kitty qs brightnessctl grim slurp wl-copy jq xdg-user-dir dolphin; do
+for cmd in Hyprland hyprpaper hypridle hyprlock hyprpicker rofi kitty qs brightnessctl grim slurp wl-copy jq xdg-user-dir dolphin; do
     command -v "$cmd" >/dev/null || missing+=("$cmd")
 done
 fonts="$(fc-list : family)"   # read once; piping into grep -q breaks under pipefail
-for font in "Hack Nerd Font" "JetBrainsMono Nerd Font"; do
+for font in "Hack Nerd Font" "JetBrainsMono Nerd Font" "Red Hat Display"; do
     grep -qi "$font" <<<"$fonts" || missing+=("font: $font")
 done
 icons_found=0

@@ -5,6 +5,7 @@
 //   timeText           "2 h 05 m left" / "40 m to full" / ""
 //   health             0–100, or -1 when unknown
 //   profile            PowerProfile.PowerSaver / Balanced / Performance (setProfile)
+//   modeIcon           "mode-saver" / "mode-perf" / "" (balanced) for the pill
 // ---------------------------------------------------------
 pragma Singleton
 
@@ -42,6 +43,10 @@ Singleton {
     readonly property real health: cell && cell.healthPercentage > 0 ? cell.healthPercentage : -1
 
     readonly property int profile: PowerProfiles.profile
+    // badge next to the battery on the pill: leaf = saver, speedometer = performance, none = balanced
+    readonly property string modeIcon: profile === PowerProfile.PowerSaver ? "mode-saver"
+        : profile === PowerProfile.Performance ? "mode-perf"
+        : ""
     readonly property bool hasPerformance: PowerProfiles.hasPerformanceProfile
     function setProfile(p) { PowerProfiles.profile = p; }
 }
