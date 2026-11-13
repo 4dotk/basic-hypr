@@ -60,6 +60,17 @@ hl.layer_rule({
     ignore_alpha = 0.5,
 })
 
+-- Blur the whole desktop behind the power screen (CTRL + ALT + Delete).
+-- Plain fade (no slide / popin): it uses fadeLayersIn / fadeLayersOut from
+-- dots/animations.lua, which carry the blur, dim and tiles together.
+hl.layer_rule({
+    name         = "blur-power",
+    match        = { namespace = "^quickshell-power$" },
+
+    blur         = true,
+    animation    = "fade",
+})
+
 -- Screenshot overlays (slurp = 'selection', hyprpicker freeze) must vanish
 -- instantly — otherwise their fade-out gets captured and tints the shot.
 hl.layer_rule({

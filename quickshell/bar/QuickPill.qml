@@ -1,7 +1,7 @@
 // ---------------------------------------------------------
 // QUICK PILL  — right edge of the bar: a row of status icons.
 //   network · bluetooth · sound · battery
-// (power has its own pill at the left edge: bar/PowerPill.qml)
+// (power: CTRL + ALT + Delete opens the power screen, bar/PowerMenu.qml)
 // Each icon opens its own dropdown (no shared panel, no tabs); the name is
 // the bar's `open` value: "network", "bluetooth", "sound", "battery".
 // Bluetooth / battery icons only show when the machine has them; the battery
@@ -49,7 +49,7 @@ Pill {
 
         Row {
             id: icons
-            spacing: 14
+            spacing: 16
 
             Icon { panel: "network";   SvgIcon { name: Net.icon; color: root.open === "network" ? Theme.accent : Net.online ? Theme.fg : Theme.fgDim } }
             Icon { panel: "bluetooth"; visible: Bt.present; SvgIcon { name: Bt.icon; color: root.open === "bluetooth" ? Theme.accent : Bt.on ? Theme.fg : Theme.fgDim } }
@@ -88,7 +88,7 @@ Pill {
                 // percentage, as wide as "99%" so the pill keeps its width
                 Label {
                     id: percent
-                    x: bat.width + (badge.visible ? badge.size / 2 : 0) + 4
+                    x: bat.width + (badge.visible ? badge.size / 2 : 0) + 6
                     anchors.verticalCenter: parent.verticalCenter
                     width: Math.ceil(Math.max(implicitWidth, widest.advanceWidth))
                     horizontalAlignment: Text.AlignRight

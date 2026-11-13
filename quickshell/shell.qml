@@ -20,4 +20,11 @@ ShellRoot {
 
         Bar {}
     }
+
+    // power screen (CTRL + ALT + Delete); shows only on the monitor it opened on
+    Variants {
+        model: Quickshell.screens
+
+        PowerMenu {}
+    }
 }

@@ -2,7 +2,7 @@
 // BAR  — one per monitor: a full-width, invisible layer at the top that
 // holds the pills.
 //
-//   [power][workspaces][stats]      [clock]      [media][quick][bell]
+//   [workspaces][stats]        [clock]        [media][quick][bell]
 //
 // `mask` makes only the pills clickable; the empty rest of the strip
 // lets clicks through to the windows below. Panels slide out under their
@@ -32,7 +32,7 @@ PanelWindow {
     readonly property HyprlandMonitor monitor: Hyprland.monitorFor(screen)
     readonly property bool focused: Hyprland.focusedMonitor === monitor
 
-    property string open: ""              // "calendar", "clocks", "power", a quick-pill dropdown ("network", "sound", …) or ""
+    property string open: ""              // "calendar", "clocks", a quick-pill dropdown ("network", "sound", …) or ""
     readonly property bool hidden: BarState.hidden
     onHiddenChanged: if (hidden) open = ""
 
@@ -49,8 +49,6 @@ PanelWindow {
 
     // only pills that are on screen are clickable
     mask: Region {
-        Region { item: power.visible ? power : null }
-        Region { item: power.visible ? power.drawerBox : null }
         Region { item: workspaces.visible ? workspaces : null }
         Region { item: stats.visible ? stats : null }
         Region { item: clock.visible ? clock : null }
@@ -75,17 +73,10 @@ PanelWindow {
         function onOpenPanel(name) { if (bar.focused && !bar.hidden) bar.open = bar.open === name ? "" : name; }
     }
 
-    // ---- left: power at the edge, then workspaces and stats ----
-    PowerPill {
-        id: power
-        x: Theme.gutter
-        shown: !bar.hidden
-        open: bar.open
-        onRequest: panel => bar.open = (bar.open === panel ? "" : panel)
-    }
+    // ---- left ----
     WorkspacesPill {
         id: workspaces
-        x: power.x + power.width + Theme.spacing
+        x: Theme.gutter
         monitor: bar.monitor
         shown: !bar.hidden
     }

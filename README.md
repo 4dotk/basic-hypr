@@ -46,7 +46,7 @@ Fedora names; `install.sh` warns about anything missing but installs nothing.
 | Desktop | `hyprland` `hyprpaper` `hyprpolkitagent` `kitty` `rofi` |
 | Lock screen + idle | `hyprlock` `hypridle` `brightnessctl` |
 | Bar | `quickshell` `brightnessctl` `lm_sensors` |
-| Quick pill (network, Bluetooth, battery, power) | `NetworkManager` `bluez` `upower` `tuned-ppd` (or `power-profiles-daemon`) `hyprlock` |
+| Quick pill (network, Bluetooth, battery) | `NetworkManager` `bluez` `upower` `tuned-ppd` (or `power-profiles-daemon`) |
 | Clean logout | `hyprshutdown` (optional — without it apps aren't asked to close first) |
 | Media keys | `wireplumber` `brightnessctl` `playerctl` |
 | Screenshots | `grim` `slurp` `hyprpicker` `wl-clipboard` `jq` `xdg-user-dirs` |
@@ -110,6 +110,7 @@ instead of gnome-keyring; without the flag nothing changes.
 | `SUPER + C` | close window |
 | `SUPER + L` | lock (also after 5 min idle: dim at 2, lock at 5, screen off at 5.5, sleep at 15) |
 | `SUPER + M` | log out cleanly (closes apps first) |
+| `CTRL + ALT + Delete` | power screen: lock, log out, suspend, reboot, shut down (←/→ Enter, Esc) |
 | `SUPER + V` | float / tile window |
 | `SUPER + SHIFT + F` | fullscreen window (covers bar and gaps) |
 | `SUPER + F` | hide / show the bar (notifications and the OSD still pop in) |

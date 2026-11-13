@@ -1,7 +1,7 @@
 // Open/close a panel on the focused monitor:
 //   qs ipc call panel toggle   calendar + timer panel
 //   qs ipc call panel open sound   a quick-pill dropdown: network, bluetooth,
-//                                  sound, battery or power
+//                                  sound or battery
 pragma Singleton
 
 import QtQuick

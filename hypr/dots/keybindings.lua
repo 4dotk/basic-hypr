@@ -25,6 +25,8 @@ hl.bind(mainMod .. " + M", hl.dsp.exec_cmd(
 hl.bind(mainMod .. " + E", hl.dsp.exec_cmd(fileManager))
 -- Lock: goes through hypridle's lock_cmd, so only one hyprlock ever runs
 hl.bind(mainMod .. " + L", hl.dsp.exec_cmd("loginctl lock-session"))
+-- Power screen: lock, log out, suspend, reboot, shut down (quickshell, bar/PowerMenu.qml)
+hl.bind("CTRL + ALT + Delete", hl.dsp.exec_cmd("qs ipc call power toggle"))
 hl.bind(mainMod .. " + V", hl.dsp.window.float({ action = "toggle" }))
 hl.bind(mainMod .. " + R", hl.dsp.exec_cmd(menu))
 hl.bind(mainMod .. " + P", hl.dsp.window.pseudo())
