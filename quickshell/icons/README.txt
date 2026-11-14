@@ -8,3 +8,6 @@ Exception: wired.svg is "computer-ethernet" from Hugeicons' free set
 Also from Google's Material Symbols (Apache License 2.0), via Iconify, white:
 bt-scan.svg (bluetooth-searching),
 mode-saver.svg (eco), mode-perf.svg (speed).
+
+clipboard.svg and hotspot.svg: drawn for basic-hypr (the clipboard page is
+inspired by Papirus's filled style, not copied).

@@ -14,6 +14,9 @@
 //   merge (the last window closes, `gooTime`, OutBack): the same played back —
 //     stubs lash out, meet, and the body floods in and swells a little.
 // Nothing animates while the bar is still.
+// Joins only animate while both pills are at rest (Pill.atRest): a full bar
+// sliding in (SUPER + F) or a pill dropping in arrives already joined /
+// split, so the goo is only for windows opening and closing.
 //
 // Fully joined it is a plain Rectangle (+ top / bottom border) on whole
 // pixels, so it meets the pills with no seam. Each bridge drives the facing
@@ -51,9 +54,13 @@ Item {
     opacity: leftPill ? leftPill.opacity : 1
     visible: width > 0 && progress > 0.001
 
+    readonly property bool atRest: (leftPill?.atRest ?? true) && (rightPill?.atRest ?? true)
     onOnChanged: {
-        if (on) { split.stop(); merge.restart(); }
-        else    { merge.stop(); split.restart(); }
+        split.stop();
+        merge.stop();
+        if (!atRest) progress = on ? 1 : 0;
+        else if (on) merge.restart();
+        else split.restart();
     }
     SequentialAnimation {
         id: split

@@ -1,8 +1,12 @@
 // ---------------------------------------------------------
 // STATS  — CPU %, used RAM, CPU temperature for the stats pill.
-// Every 2 s one small shell call reads all three, in sections marked #name:
-//   /proc/stat (cpu line) · /proc/meminfo · sensors -j (lm_sensors)
+// Every 2 s it re-reads three small files through FileView, no processes
+// (the way end-4's ResourceUsage does it):
+//   /proc/stat (the cpu line) · /proc/meminfo · the CPU sensor's temp input
 // CPU usage is the busy share since the previous read.
+// The sensor is found once at start (hwmon numbers can change between
+// boots): AMD k10temp "Tctl", else Intel coretemp "Package id 0".
+// No sensor: temp stays NaN and the pill hides it.
 // ---------------------------------------------------------
 pragma Singleton
 
@@ -18,40 +22,27 @@ Singleton {
     property real memUsed: 0        // kB
     property real temp: NaN         // CPU °C, NaN if no sensor found
 
-    property var last: null         // previous cpu counters { idle, total }
+    property var last: null         // previous cpu counters: idle, total
+    property string tempPath: ""    // e.g. /sys/class/hwmon/hwmon6/temp1_input
+
+    FileView { id: stat;    path: "/proc/stat";    blockLoading: true }
+    FileView { id: meminfo; path: "/proc/meminfo"; blockLoading: true }
+    FileView { id: sensor;  path: root.tempPath;   blockLoading: true }
 
     Timer {
         interval: 2000
         repeat: true
         running: true
         triggeredOnStart: true
-        onTriggered: read.running = true
+        onTriggered: root.read()
     }
 
-    Process {
-        id: read
-        command: ["sh", "-c", [
-            "echo '#stat'; head -1 /proc/stat",
-            "echo '#mem'; grep -E '^(MemTotal|MemAvailable):' /proc/meminfo",
-            "echo '#sensors'; sensors -j 2>/dev/null"
-        ].join("; ")]
-        stdout: StdioCollector {
-            onStreamFinished: root.parse(this.text)
-        }
-    }
-
-    function parse(text) {
-        // split into { stat: [...lines], mem: [...], sensors: [...] }
-        const sec = {};
-        let cur = null;
-        for (const line of text.split("\n")) {
-            if (line.startsWith("#")) { cur = line.slice(1); sec[cur] = []; }
-            else if (cur && line.trim() !== "") sec[cur].push(line);
-        }
-
+    function read() {
         // cpu  user nice system idle iowait irq softirq steal ...
-        if (sec.stat?.length) {
-            const n = sec.stat[0].trim().split(/\s+/).slice(1).map(Number);
+        stat.reload();
+        const line = stat.text().split("\n")[0] ?? "";
+        if (line.startsWith("cpu ")) {
+            const n = line.trim().split(/\s+/).slice(1).map(Number);
             const idle = n[3] + n[4];
             const total = n.reduce((a, b) => a + b, 0);
             if (last && total > last.total)
@@ -60,33 +51,30 @@ Singleton {
         }
 
         // MemTotal / MemAvailable in kB
-        const m = {};
-        for (const line of sec.mem || []) {
-            const p = line.split(/[:\s]+/);
-            m[p[0]] = parseInt(p[1]);
-        }
-        if (m.MemTotal > 0) {
-            memUsed = m.MemTotal - m.MemAvailable;
-            memory = memUsed / m.MemTotal;
+        meminfo.reload();
+        const total = Number(meminfo.text().match(/MemTotal:\s*(\d+)/)?.[1] ?? 0);
+        const avail = Number(meminfo.text().match(/MemAvailable:\s*(\d+)/)?.[1] ?? 0);
+        if (total > 0) {
+            memUsed = total - avail;
+            memory = memUsed / total;
         }
 
-        // AMD: k10temp Tctl · Intel: coretemp 'Package id 0'
-        let s = null;
-        try { s = JSON.parse((sec.sensors || []).join("\n")); } catch (e) {}
-        temp = NaN;
-        if (s) {
-            temp = first(s, "k10temp", "Tctl");
-            if (isNaN(temp)) temp = first(s, "coretemp", "Package id 0");
+        // millidegrees
+        if (tempPath !== "") {
+            sensor.reload();
+            const t = parseInt(sensor.text());
+            temp = isNaN(t) ? NaN : t / 1000;
         }
     }
 
-    // first *_input reading of the chip whose name starts with `chip`, under `label`
-    function first(s, chip, label) {
-        for (const k in s) {
-            if (!k.startsWith(chip) || typeof s[k][label] !== "object") continue;
-            for (const f in s[k][label])
-                if (f.endsWith("_input")) return s[k][label][f];
-        }
-        return NaN;
+    // once: the hwmon temp input whose chip + label match the CPU package
+    Process {
+        running: true
+        command: ["sh", "-c",
+            "for h in /sys/class/hwmon/hwmon*; do n=$(cat \"$h/name\" 2>/dev/null); "
+          + "for l in \"$h\"/temp*_label; do [ -f \"$l\" ] || continue; "
+          + "case \"$n:$(cat \"$l\")\" in k10temp:Tctl|\"coretemp:Package id 0\") echo \"${l%_label}_input\"; exit 0;; esac; "
+          + "done; done"]
+        stdout: StdioCollector { onStreamFinished: root.tempPath = this.text.trim() }
     }
 }

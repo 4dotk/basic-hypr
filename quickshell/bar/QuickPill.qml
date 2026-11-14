@@ -1,9 +1,9 @@
 // ---------------------------------------------------------
 // QUICK PILL  — right edge of the bar: a row of status icons.
-//   network · bluetooth · sound · battery
+//   clipboard · network · bluetooth · sound · battery
 // (power: CTRL + ALT + Delete opens the power screen, bar/PowerMenu.qml)
 // Each icon opens its own dropdown (no shared panel, no tabs); the name is
-// the bar's `open` value: "network", "bluetooth", "sound", "battery".
+// the bar's `open` value: "clipboard", "network", "bluetooth", "sound", "battery".
 // Bluetooth / battery icons only show when the machine has them; the battery
 // also shows its percentage (fixed width for two digits, right-aligned, like
 // the stats; at 100 % it is one character wider).
@@ -24,12 +24,13 @@ Pill {
     signal request(string panel)            // ask the bar to open (or toggle) a panel
 
     // the dropdowns this pill owns; open === one of these means it's expanded
-    readonly property var panels: ["network", "bluetooth", "sound", "battery"]
+    readonly property var panels: ["clipboard", "network", "bluetooth", "sound", "battery"]
     readonly property bool expanded: panels.includes(open)
     readonly property int inset: 6           // extra room around a dropdown, on top of the pill's padding
 
     view: idleView
     drawer: !expanded ? null
+          : open === "clipboard" ? clipboardView
           : open === "network" ? networkView
           : open === "bluetooth" ? bluetoothView
           : open === "sound" ? soundView
@@ -38,7 +39,10 @@ Pill {
 
     // scan for wifi only while its list is open; stop bluetooth discovery on close
     Binding { target: Net; property: "scanning"; value: true; when: root.open === "network" }
-    onOpenChanged: if (open !== "bluetooth" && Bt.scanning) Bt.setScanning(false)
+    onOpenChanged: {
+        if (open !== "bluetooth" && Bt.scanning) Bt.setScanning(false);
+        if (open === "clipboard") ClipHist.refresh();
+    }
 
     // ---- resting: one icon per dropdown ----
     View {
@@ -51,6 +55,7 @@ Pill {
             id: icons
             spacing: 16
 
+            Icon { panel: "clipboard"; SvgIcon { name: "clipboard"; color: root.open === "clipboard" ? Theme.accent : Theme.fg } }
             Icon { panel: "network";   SvgIcon { name: Net.icon; color: root.open === "network" ? Theme.accent : Net.online ? Theme.fg : Theme.fgDim } }
             Icon { panel: "bluetooth"; visible: Bt.present; SvgIcon { name: Bt.icon; color: root.open === "bluetooth" ? Theme.accent : Bt.on ? Theme.fg : Theme.fgDim } }
             Icon { panel: "sound";     SvgIcon { name: Theme.volumeIcon(Audio.volume, Audio.muted); color: root.open === "sound" ? Theme.accent : Audio.muted ? Theme.fgDim : Theme.fg } }
@@ -120,6 +125,13 @@ Pill {
 
     // ---- dropdowns: drawers under the icons ----
     drawers: [
+        View {
+            id: clipboardView
+            shown: root.open === "clipboard"
+            implicitWidth: clipboard.implicitWidth + root.inset * 2
+            implicitHeight: clipboard.implicitHeight + root.inset * 2
+            ClipPanel { id: clipboard; anchors.centerIn: parent; onPicked: root.request("clipboard") }
+        },
         View {
             id: networkView
             shown: root.open === "network"

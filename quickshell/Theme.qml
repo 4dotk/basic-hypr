@@ -26,6 +26,7 @@ Singleton {
             fg:       "#ffcdcdcd",   // main text (kitty fg)
             fgDim:    "#ff6a6a78",   // secondary text / icons
             line:     "#ff094f7c",   // pill borders (hypr inactive border)
+            popup:    "#ff0b1a26",   // notification popups: solid, dark blue
             urgent:   "#ffe0a363"    // warnings (kitty amber)
         },
         // Vague: matches the kitty Vague colourscheme, very muted
@@ -37,6 +38,7 @@ Singleton {
             fg:       "#ffcdcdcd",
             fgDim:    "#ff606079",
             line:     "#ff252530",
+            popup:    "#ff131a20",   // notification popups: solid, dark slate
             urgent:   "#ffe0a363"
         }
     })
@@ -65,6 +67,11 @@ Singleton {
     readonly property color fg:       p.fg
     readonly property color fgDim:    p.fgDim
     readonly property color line:     p.line
+    readonly property color popup:    p.popup ?? Qt.rgba(p.bg.r, p.bg.g, p.bg.b, 1)   // solid surfaces over windows
+    // Hyprland's window borders (hypr/dots/display.lua; keep in sync). Same in
+    // every theme, like Hyprland's own. Used around notification popups.
+    readonly property color windowBorder: "#eeaaddff"           // focused: light end of the gradient, rgba(aaddffee)
+    readonly property color windowBorderInactive: "#ee094f7c"   // unfocused: rgba(094f7cee)
     readonly property color urgent:   p.urgent
 
     // ---- shape (matches hypr border_size / rounding) ----
@@ -103,7 +110,7 @@ Singleton {
         bell:       String.fromCodePoint(0xf009a),  // md-bell
         bellOff:    String.fromCodePoint(0xf009b),  // md-bell_off (do not disturb)
         timer:      String.fromCodePoint(0xf051f),  // md-timer_sand
-        stopwatch:  String.fromCodePoint(0xf006b),  // md-av_timer
+        stopwatch:  String.fromCodePoint(0xf051b),  // md-timer_outline
         lap:        String.fromCodePoint(0xf023d),  // md-flag_outline
         left:       String.fromCodePoint(0xf0141),  // md-chevron_left
         right:      String.fromCodePoint(0xf0142),  // md-chevron_right
@@ -143,7 +150,9 @@ Singleton {
         perf:       String.fromCodePoint(0xf04c5),  // md-speedometer
         health:     String.fromCodePoint(0xf05f6),  // md-heart_pulse
         search:     String.fromCodePoint(0xf0349),  // md-magnify
-        close:      String.fromCodePoint(0xf0156)   // md-close
+        close:      String.fromCodePoint(0xf0156),  // md-close
+        star:       String.fromCodePoint(0xf04ce),  // md-star
+        starOff:    String.fromCodePoint(0xf04d2)   // md-star_outline
     })
 
     // battery glyphs, 0 % .. 100 % in steps of 10 (md-battery_outline, _10 … _90, md-battery)

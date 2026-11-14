@@ -37,13 +37,13 @@ View {
 
         Clickable {
             visible: Countdown.active
-            text: Theme.glyph.timer + " " + Time.clock(Countdown.left * 1000)
+            text: "(" + Theme.glyph.timer + " " + Time.clock(Countdown.left * 1000) + ")"
             color: Countdown.running ? Theme.fg : Theme.fgDim   // running: text colour · paused: dim
             onClicked: root.timeClicked()
         }
         Clickable {
             visible: Stopwatch.active
-            text: Theme.glyph.stopwatch + " " + Time.clock(Stopwatch.elapsed)
+            text: "(" + Theme.glyph.stopwatch + " " + Time.clock(Stopwatch.elapsed) + ")"
             color: Stopwatch.running ? Theme.fg : Theme.fgDim
             onClicked: root.timeClicked()
         }

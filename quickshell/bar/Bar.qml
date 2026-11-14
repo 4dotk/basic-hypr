@@ -11,9 +11,11 @@
 // Only one panel is open at a time (`open`); clicking anywhere outside
 // the bar closes it.
 //
-// SUPER + F hides the bar (services/BarState.qml): the pills pop out left to
-// right, the reserved strip goes away so tiled windows grow into it, and only
+// SUPER + F hides the bar (services/BarState.qml): the pills slide up together,
+// the reserved strip goes away so tiled windows grow into it, and only
 // the clock pill pops back in for the OSD and the bell for notification popups.
+// A full bar (below) slides up and drops back in as one piece; separate
+// pills move as separate pills.
 //
 // Empty workspace (no windows on this monitor's active workspace): bridges
 // (bar/Bridge.qml) fill the gaps between neighbouring pills and the facing
@@ -44,15 +46,28 @@ PanelWindow {
 
     property string open: ""              // "calendar", "clocks", a quick-pill dropdown ("network", "sound", …) or ""
     readonly property bool hidden: BarState.hidden
-    onHiddenChanged: if (hidden) open = ""
+    onHiddenChanged: {
+        if (hidden) open = "";
+        leavingFull = hidden && empty;
+    }
 
     // ---- empty workspace: one full bar ----
     readonly property bool empty: (monitor?.activeWorkspace?.toplevels.values.length ?? 0) === 0
-    readonly property bool merged: empty && !hidden
+    readonly property bool merged: empty && (!hidden || leavingFull)
     Component.onCompleted: Hyprland.refreshToplevels()
 
-    // the pills on screen, left to right; bridge i sits between row[i] and row[i + 1]
-    readonly property var row: [workspaces, stats, clock, media, quick, notif].filter(p => p.shown)
+    // Hiding a full bar: it stays merged (bridges, square corners, end padding)
+    // until the last pill has slid out of sight, so it leaves as one piece.
+    // Clears itself when the slide ends (no timer to keep in step with Pill.qml).
+    // Showing needs nothing here: joins and end padding snap while pills are
+    // off their resting spot (Pill.atRest), so the bar drops in already joined.
+    property bool leavingFull: false
+    readonly property bool sliding: pills.some(p => !p.shown && p.visible)
+    onSlidingChanged: if (!sliding) leavingFull = false
+
+    // all pills left to right, and the ones on screen; bridge i sits between row[i] and row[i + 1]
+    readonly property var pills: [workspaces, stats, clock, media, quick, notif]
+    readonly property var row: pills.filter(p => p.shown || (leavingFull && p.visible))
     function linked(i) {
         const a = row[i], b = row[i + 1];
         return merged && !!a && !!b;
@@ -87,14 +102,15 @@ PanelWindow {
 
     // ---- the layer surface ----
     anchors { top: true; left: true; right: true }
-    implicitHeight: 540                   // room for the tallest panel (6-week calendar)
+    implicitHeight: 760                   // room for the tallest dropdown (network with many networks
+                                          // + hotspot); the rest is transparent and outside the mask
     exclusiveZone: hidden ? 0 : Theme.gap + Theme.idleHeight   // tiled windows start below the resting pills
     color: "transparent"
 
     WlrLayershell.namespace: "quickshell-bar"   // used by the blur rule in hypr/dots/windows.lua
     WlrLayershell.layer: WlrLayer.Top
-    // keyboard only while the timer panel (hh:mm:ss) or the network list (Wi-Fi password) is open
-    WlrLayershell.keyboardFocus: open === "clocks" || open === "network" ? WlrKeyboardFocus.OnDemand : WlrKeyboardFocus.None
+    // keyboard only while a panel is open (Esc to close, timer fields, Wi-Fi password)
+    WlrLayershell.keyboardFocus: open !== "" ? WlrKeyboardFocus.OnDemand : WlrKeyboardFocus.None
 
     // only pills that are on screen are clickable
     mask: Region {
@@ -116,6 +132,13 @@ PanelWindow {
         onCleared: bar.open = ""
     }
 
+    // Esc closes the open panel (a password field takes Esc first to cancel its prompt)
+    Shortcut {
+        sequence: "Esc"
+        enabled: bar.open !== ""
+        onActivated: bar.open = ""
+    }
+
     // qs ipc call panel toggle  -> timer / stopwatch on the focused monitor
     Connections {
         target: Panel
@@ -126,6 +149,7 @@ PanelWindow {
     // ---- left ----
     WorkspacesPill {
         id: workspaces
+        padLeftExtra: bar.merged ? Theme.pad - padX : 0   // full bar: same end padding as the other pills
         backdrop: fillLayer
         x: Theme.gutter
         monitor: bar.monitor
@@ -168,9 +192,11 @@ PanelWindow {
     }
     NotifPill {
         id: notif
+        padRightExtra: bar.merged ? Theme.pad - padX : 0   // full bar: same end padding as the other pills
         backdrop: fillLayer
         x: bar.width - Theme.gutter - width
         focused: bar.focused
+        desktop: bar.empty
         open: bar.open
         onRequest: panel => bar.open = (bar.open === panel ? "" : panel)
         // while hidden, only pops in for a notification popup

@@ -4,7 +4,9 @@
 //                flush right); the bar's `open` value is "notifs"
 //   popups       one at a time, a separate opaque card a small gap below the
 //                bell (no curved join — that's only for the center; focused
-//                monitor only); amber border for critical ones
+//                monitor only); Theme.popup background (per theme), 1 px border:
+//                Hyprland's light window-border blue on an empty workspace,
+//                Hyprland's inactive window border over windows; amber border for critical ones
 //   dot          something arrived since the center was last opened
 //   bell-off     do not disturb is on
 // See services/Notifs.qml, bar/NotifCenter.qml, bar/NotifView.qml.
@@ -19,6 +21,7 @@ Pill {
     id: root
 
     required property bool focused          // is this bar's monitor focused
+    property bool desktop: false            // no windows on this monitor's workspace
     property string open: ""                // the bar's open panel
     signal request(string panel)            // ask the bar to open (or toggle) a panel
 
@@ -29,7 +32,6 @@ Pill {
     padX: 8                                 // a 34 × 34 square
     drawer: expanded ? centerView : popup ? popupView : null
     drawerAlign: "right"
-    borderColor: popup && Notifs.current?.urgency === NotificationUrgency.Critical ? Theme.urgent : Theme.line
 
     Binding { target: Notifs; property: "centerOpen"; value: true; when: root.expanded }
 
@@ -80,6 +82,17 @@ Pill {
             id: popupView
             detached: true
             opaque: true                        // a popup sits over windows: no see-through
+            // the theme's popup colour, solid, with a 1 px border: on an empty
+            // workspace the light blue of Hyprland's focused-window border (it
+            // outlines the card on the wallpaper); over windows Hyprland's inactive
+            // window border, so only the focused window says "active"; amber when critical
+            cardColor: Theme.popup
+            cardBorder: 1
+            // 14 px below the bar (= Hyprland gaps_out): the card's top-right corner
+            // lines up with a window's top-right corner
+            cardGap: Theme.gutter
+            cardStroke: Notifs.current?.urgency === NotificationUrgency.Critical ? Theme.urgent
+                      : root.desktop ? Theme.windowBorder : Theme.windowBorderInactive
             notification: Notifs.current
             shown: root.popup
         }

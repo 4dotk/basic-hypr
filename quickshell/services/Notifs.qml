@@ -13,11 +13,19 @@
 // marks a notification critical — low battery and the like).
 // `unread`: arrived since the center was last opened (the bell's dot).
 // History lives in memory: gone when quickshell restarts.
+//
+// Sound: each new notification plays one (pw-play), unless do not disturb is
+// on (no sounds at all then, critical included) or the app asks for silence
+// (hint suppress-sound). The app's own sound-file / sound-name hint wins
+// (names looked up in KDE's Ocean theme, then freedesktop); otherwise Ocean's
+// message-attention.oga, dialog-warning.oga for critical ones.
+// At most one sound per 400 ms, so a burst doesn't stack up.
 // ---------------------------------------------------------
 pragma Singleton
 
 import QtQuick
 import Quickshell
+import Quickshell.Io
 import Quickshell.Services.Notifications
 
 Singleton {
@@ -66,12 +74,37 @@ Singleton {
             const all = server.trackedNotifications.values;
             for (let i = 0; i < all.length - root.maxKept; i++) all[i].dismiss();
 
+            root.chime(n);
             if (root.centerOpen) return;            // it's in the list already
             root.unread++;
             if (root.dnd && n.urgency !== NotificationUrgency.Critical) return;
             root.queue = [...root.queue, n];
             if (!root.current) root.next();
         }
+    }
+
+    // ---- sound ----
+    readonly property string ocean: "/usr/share/sounds/ocean/stereo/"
+    readonly property string freedesktop: "/usr/share/sounds/freedesktop/stereo/"
+    property real lastChime: 0
+    function chime(n) {
+        if (dnd) return;
+        const h = n.hints ?? ({});
+        if (h["suppress-sound"] === true) return;
+        const now = Date.now();
+        if (now - lastChime < 400) return;
+        lastChime = now;
+        const fallback = ocean + (n.urgency === NotificationUrgency.Critical ? "dialog-warning.oga" : "message-attention.oga");
+        const file = String(h["sound-file"] ?? "");
+        const name = h["sound-name"] ? String(h["sound-name"]) + ".oga" : "";
+        const p = player.createObject(root, { command: ["sh", "-c",
+            "for f in \"$1\" \"$2\" \"$3\" \"$4\"; do [ -f \"$f\" ] && exec pw-play \"$f\"; done",
+            "sh", file, name ? ocean + name : "", name ? freedesktop + name : "", fallback] });
+        p.running = true;
+    }
+    Component {
+        id: player
+        Process { onExited: destroy() }
     }
 
     // left click: run the default action (if any), then remove it

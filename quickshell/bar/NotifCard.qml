@@ -4,6 +4,8 @@
 // Used by the popup (bar/NotifView.qml) and the center list (bar/NotifCenter.qml).
 // Left click: run its default action and remove it · Right click: remove it.
 // `boxed`: draw its own rounded background (in the center's list).
+// `raised`: it sits on a bgAlt surface (boxed, or the popup card), so its
+// inner boxes use bg to stand out.
 // ---------------------------------------------------------
 
 import QtQuick
@@ -18,6 +20,7 @@ Item {
 
     property Notification n
     property bool boxed: false
+    property bool raised: boxed
     readonly property int inset: boxed ? 12 : 0
 
     readonly property bool critical: n?.urgency === NotificationUrgency.Critical
@@ -70,7 +73,7 @@ Item {
                 width: 40
                 height: 40
                 radius: 10
-                color: root.boxed ? Theme.bg : Theme.bgAlt
+                color: root.raised ? Theme.bg : Theme.bgAlt
 
                 Label {
                     anchors.centerIn: parent
@@ -145,7 +148,7 @@ Item {
                     implicitWidth: actLabel.implicitWidth + 20
                     implicitHeight: actLabel.implicitHeight + 10
                     radius: height / 2
-                    color: actMouse.containsMouse ? Theme.selected : (root.boxed ? Theme.bg : Theme.bgAlt)
+                    color: actMouse.containsMouse ? Theme.selected : (root.raised ? Theme.bg : Theme.bgAlt)
 
                     Label {
                         id: actLabel

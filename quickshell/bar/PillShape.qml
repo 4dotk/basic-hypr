@@ -38,6 +38,8 @@ Shape {
     property real border
     property color fill
     property color cardFill: fill           // a detached card's fill (popups: opaque)
+    property color cardStroke: stroke       // a detached card's border colour …
+    property real cardBorder: border        // … and width
     property color stroke
     property real joinLeft: 0
     property real joinRight: 0
@@ -152,15 +154,15 @@ Shape {
     // a detached drawer: its own card, its own fill
     ShapePath {
         fillColor: root.cardFill
-        strokeColor: root.stroke
-        strokeWidth: root.border
+        strokeColor: root.cardStroke
+        strokeWidth: root.cardBorder
         joinStyle: ShapePath.RoundJoin
         PathSvg { path: root.card() }
     }
 
     function card() {
         if (drawerGap <= 0 || dh < 0.5) return "";
-        const h = border / 2, o = -minX, r = Math.max(0, radius - h);
+        const h = cardBorder / 2, o = -minX, r = Math.max(0, radius - h);
         const x1 = o + drawerX + h, x2 = o + drawerX + drawerWidth - h;
         const y1 = headHeight + drawerGap + h, y2 = headHeight + drawerGap + dh - h;
         const rr = Math.max(0, Math.min(r, (y2 - y1) / 2, (x2 - x1) / 2));

@@ -45,8 +45,10 @@ Fedora names; `install.sh` warns about anything missing but installs nothing.
 |---|---|
 | Desktop | `hyprland` `hyprpaper` `hyprpolkitagent` `kitty` `rofi` |
 | Lock screen + idle | `hyprlock` `hypridle` `brightnessctl` |
-| Bar | `quickshell` `brightnessctl` `lm_sensors` |
+| Bar | `quickshell` `brightnessctl` |
 | Quick pill (network, Bluetooth, battery) | `NetworkManager` `bluez` `upower` `tuned-ppd` (or `power-profiles-daemon`) |
+| Clipboard history | `cliphist` `wl-clipboard` |
+| Notification sounds | `pipewire-utils` (`pw-play`) `ocean-sound-theme` `sound-theme-freedesktop` |
 | Clean logout | `hyprshutdown` (optional — without it apps aren't asked to close first) |
 | Media keys | `wireplumber` `brightnessctl` `playerctl` |
 | Screenshots | `grim` `slurp` `hyprpicker` `wl-clipboard` `jq` `xdg-user-dirs` |
@@ -111,6 +113,7 @@ instead of gnome-keyring; without the flag nothing changes.
 | `SUPER + L` | lock (also after 5 min idle: dim at 2, lock at 5, screen off at 5.5, sleep at 15) |
 | `SUPER + M` | log out cleanly (closes apps first) |
 | `CTRL + ALT + Delete` | power screen: lock, log out, suspend, reboot, shut down (←/→ Enter, Esc) |
+| `SUPER + V` | clipboard history |
 | `SUPER + SHIFT + V` | float / tile window |
 | `SUPER + P` | pseudo-tile window |
 | `SUPER + J` | toggle split direction |
@@ -138,10 +141,10 @@ Separate pills along the top of each monitor:
 | Pill | Shows | Mouse |
 |---|---|---|
 | workspaces | workspaces on this monitor, active highlighted | click: go there · scroll: next / previous |
-| stats | CPU %, used RAM, CPU temperature (`sensors`) every 2 s; amber when high (70% / 70°), bold at 90% / 85° | |
+| stats | CPU %, used RAM, CPU temperature (read straight from `/proc` and the kernel's hwmon sensor, AMD `k10temp` or Intel `coretemp`) every 2 s; amber when high (70% / 70°), bold at 90% / 85° | |
 | clock | date + time (+ running timer / stopwatch) | click date: calendar · click time: timer / stopwatch |
 | media | cover + title, only while something plays (and a few seconds after pausing) | hover: artist, progress, prev / play / next |
-| quick | network, Bluetooth, volume, battery % (Bluetooth / battery only when the machine has them) | click an icon: its own dropdown · scroll: volume ±5% |
+| quick | clipboard, network, Bluetooth, volume, battery % (Bluetooth / battery only when the machine has them) | click an icon: its own dropdown · scroll: volume ±5% |
 | bell | dot = unread, bell-off = do not disturb | click: notification center |
 
 **Dropdowns** slide out under their pill as one shape with it (drawers); only
@@ -149,7 +152,8 @@ one is open at a time and a click anywhere outside closes it.
 
 | Icon | Dropdown |
 |---|---|
-| network | wired status; Wi-Fi switch; networks by signal, connected first. Click: connect (password field for WPA / WPA3 personal) or disconnect. Enterprise (802.1x) networks are set up in `nm-connection-editor`. Scans only while open. |
+| clipboard | recent copies (cliphist), newest first. Click: copy it again · − or right click: delete · **Clear**: forget all. Images show as a line of text. |
+| network | wired status; Wi-Fi switch; networks by signal, connected first (scrolls). Click: connect (password field for WPA / WPA3 personal) or disconnect. Enterprise (802.1x) networks are set up in `nm-connection-editor`. Scans only while open. **Hotspot** switch: the first time it asks for a password; while on it shows its name (the password is never shown; sharing it by QR code is planned). It uses the Wi-Fi card, so Wi-Fi disconnects while it runs, and other devices only get internet when you're on a cable. |
 | Bluetooth | power switch; paired devices (connected first, battery %); scan button for nearby devices, click to pair + connect. No PIN pairing. |
 | volume | mixer: **Output** and **Mic** devices (click a name to make it the default, slider, mute) and **Apps** playing sound (per-app slider + mute) |
 | battery | level, time left / to full, health; power mode: Saver / Balanced / Performance (a small badge on the icon shows Saver / Performance) |
@@ -166,7 +170,8 @@ level bar in the clock pill for a moment, on the focused monitor.
 mako / dunst / swaync next to it. Popups come out of the bell one at a time
 (amber border = critical; critical ones stay until clicked). The center lists
 everything, newest first: click to open, right click to remove, **Clear** for
-all. **Do not disturb** stops popups, except critical ones. History is kept
+all. New ones play a sound (the app's own, else KDE Ocean's "message-attention";
+"dialog-warning" for critical ones). **Do not disturb** stops popups, except critical ones, and all sounds. History is kept
 in memory, so a quickshell restart clears it.
 
 **Empty workspace:** with no windows on the workspace, the pills join into
@@ -190,7 +195,7 @@ From a shell or a keybind:
 
 ```
 qs ipc call bar toggle            hide / show the bar · show · hide
-qs ipc call panel open network    open a dropdown: network · bluetooth · sound · battery · calendar · clocks
+qs ipc call panel open network    open a dropdown: clipboard · network · bluetooth · sound · battery · calendar · clocks
 qs ipc call panel toggle          open/close the timer / stopwatch card
 qs ipc call power toggle          the power screen
 qs ipc call timer start 25        timer: start 25 min · toggle · reset
@@ -215,7 +220,7 @@ kitty/kitty.conf
 quickshell/
   shell.qml           entry point, one bar per monitor
   Theme.qml           colours/sizes (same palette as rofi)
-  services/           audio, network (Net), bluetooth (Bt), battery, brightness, media,
+  services/           audio, network + hotspot (Net), bluetooth (Bt), battery, brightness, clipboard (ClipHist), media,
                       notifications, osd, stats, timer, stopwatch
   bar/                the bar, one file per pill, and the views inside them
   icons/              the quick pill's icons (own SVGs, tinted to the theme)
